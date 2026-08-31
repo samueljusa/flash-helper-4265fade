@@ -149,10 +149,93 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const fetchAccess = useServerFn(getAdminAccess);
+  const fetchTickets = useServerFn(listSupportMessages);
+  const fetchReplies = useServerFn(listSupportReplies);
+  const submitSupport = useServerFn(createSupportMessage);
+  const submitReply = useServerFn(replyToSupportMessage);
+
+  const [isStaff, setIsStaff] = useState(false);
+  const [tickets, setTickets] = useState<SupportMessage[]>([]);
+  const [replies, setReplies] = useState<SupportReply[]>([]);
+  const [openTicketId, setOpenTicketId] = useState<string | null>(null);
+  const [supportSubject, setSupportSubject] = useState("");
+  const [supportBody, setSupportBody] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [supportBusy, setSupportBusy] = useState(false);
+
   const flash = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1800);
   };
+
+  useEffect(() => {
+    if (!user) return;
+    void fetchAccess().then((a) => setIsStaff(a.isStaff)).catch(() => setIsStaff(false));
+  }, [user, fetchAccess]);
+
+  const loadTickets = async () => {
+    try {
+      setTickets(await fetchTickets());
+    } catch {
+      setTickets([]);
+    }
+  };
+
+  useEffect(() => {
+    if (view !== "support") return;
+    void loadTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  const openTicket = async (id: string) => {
+    if (openTicketId === id) {
+      setOpenTicketId(null);
+      return;
+    }
+    setOpenTicketId(id);
+    setReplyText("");
+    try {
+      setReplies(await fetchReplies({ data: { messageId: id } }));
+    } catch {
+      setReplies([]);
+    }
+  };
+
+  const sendSupport = async () => {
+    setSupportBusy(true);
+    try {
+      const res = await submitSupport({
+        data: { subject: supportSubject.trim(), body: supportBody.trim() },
+      });
+      flash(res.message);
+      if (res.ok) {
+        setSupportSubject("");
+        setSupportBody("");
+        await loadTickets();
+      }
+    } catch {
+      flash("Envoi impossible.");
+    }
+    setSupportBusy(false);
+  };
+
+  const sendReply = async (messageId: string) => {
+    setSupportBusy(true);
+    try {
+      const res = await submitReply({ data: { messageId, body: replyText.trim() } });
+      flash(res.message);
+      if (res.ok) {
+        setReplyText("");
+        setReplies(await fetchReplies({ data: { messageId } }));
+      }
+    } catch {
+      flash("Réponse impossible.");
+    }
+    setSupportBusy(false);
+  };
+
+
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -255,7 +338,9 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                     ? t("terms")
                     : view === "privacy"
                       ? t("privacy")
-                      : genericTitle;
+                      : view === "support"
+                        ? "Support"
+                        : genericTitle;
 
   const notif = prefs.notifications ?? {};
 
@@ -413,6 +498,21 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
 
             <div className="mt-6">
               <Group>
+                {isStaff && (
+                  <Row
+                    icon={Bug}
+                    label="Bureau d'administration"
+                    onClick={() => {
+                      onClose();
+                      void navigate({ to: "/admin" });
+                    }}
+                  />
+                )}
+                <Row
+                  icon={MessageSquare}
+                  label="Contacter le support"
+                  onClick={() => setView("support")}
+                />
                 <Row icon={LifeBuoy} label={t("report")} onClick={() => setView("feedback")} />
               </Group>
             </div>
@@ -631,6 +731,107 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
             </Group>
+          </div>
+        )}
+
+        {view === "support" && (
+          <div className="pt-4">
+            <div className="rounded-2xl bg-card p-4">
+              <p className="font-semibold">Contacter le support</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Décrivez votre problème, notre équipe vous répond directement ici.
+              </p>
+              <input
+                value={supportSubject}
+                onChange={(e) => setSupportSubject(e.target.value)}
+                placeholder="Objet"
+                className="mt-4 w-full rounded-xl bg-secondary px-4 py-3 text-[15px] outline-none"
+              />
+              <textarea
+                value={supportBody}
+                onChange={(e) => setSupportBody(e.target.value)}
+                rows={5}
+                placeholder="Votre message…"
+                className="mt-3 w-full resize-none rounded-xl bg-secondary px-4 py-3 text-[15px] outline-none"
+              />
+              <button
+                type="button"
+                disabled={supportBusy || supportSubject.trim().length < 3 || supportBody.trim().length < 5}
+                onClick={() => void sendSupport()}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 font-medium text-primary-foreground disabled:opacity-50"
+              >
+                {supportBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                Envoyer
+              </button>
+            </div>
+
+            <SectionTitle>Mes tickets</SectionTitle>
+            {tickets.length === 0 ? (
+              <p className="px-4 text-sm text-muted-foreground">Aucun ticket pour le moment.</p>
+            ) : (
+              <div className="space-y-3">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="rounded-2xl bg-card p-4">
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-3 text-left"
+                      onClick={() => void openTicket(ticket.id)}
+                    >
+                      <MessageSquareWarning className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{ticket.subject}</span>
+                        <span className="block truncate text-sm text-muted-foreground">
+                          {ticket.body}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
+                        {ticket.status}
+                      </span>
+                    </button>
+
+                    {openTicketId === ticket.id && (
+                      <div className="mt-3 border-t border-border pt-3">
+                        {replies.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Pas encore de réponse.</p>
+                        ) : (
+                          <ul className="space-y-2">
+                            {replies.map((r) => (
+                              <li
+                                key={r.id}
+                                className={`rounded-xl px-3 py-2 text-sm ${
+                                  r.is_staff ? "bg-primary/15" : "bg-secondary"
+                                }`}
+                              >
+                                <span className="block text-xs text-muted-foreground">
+                                  {r.is_staff ? "Support" : "Vous"}
+                                </span>
+                                {r.body}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Répondre…"
+                            className="flex-1 rounded-xl bg-secondary px-3 py-2 text-sm outline-none"
+                          />
+                          <button
+                            type="button"
+                            disabled={supportBusy || replyText.trim().length === 0}
+                            onClick={() => void sendReply(ticket.id)}
+                            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
