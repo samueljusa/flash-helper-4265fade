@@ -8,6 +8,8 @@ export type Preferences = {
   haptics?: boolean;
   voiceMode?: boolean;
   notifications?: Record<string, boolean>;
+  options?: Record<string, boolean>;
+  tone?: string;
   rating?: number;
 };
 
