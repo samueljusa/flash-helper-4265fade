@@ -170,6 +170,74 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   };
 
   useEffect(() => {
+    if (!user) return;
+    void fetchAccess().then((a) => setIsStaff(a.isStaff)).catch(() => setIsStaff(false));
+  }, [user, fetchAccess]);
+
+  const loadTickets = async () => {
+    try {
+      setTickets(await fetchTickets());
+    } catch {
+      setTickets([]);
+    }
+  };
+
+  useEffect(() => {
+    if (view !== "support") return;
+    void loadTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  const openTicket = async (id: string) => {
+    if (openTicketId === id) {
+      setOpenTicketId(null);
+      return;
+    }
+    setOpenTicketId(id);
+    setReplyText("");
+    try {
+      setReplies(await fetchReplies({ data: { messageId: id } }));
+    } catch {
+      setReplies([]);
+    }
+  };
+
+  const sendSupport = async () => {
+    setSupportBusy(true);
+    try {
+      const res = await submitSupport({
+        data: { subject: supportSubject.trim(), body: supportBody.trim() },
+      });
+      flash(res.message);
+      if (res.ok) {
+        setSupportSubject("");
+        setSupportBody("");
+        await loadTickets();
+      }
+    } catch {
+      flash("Envoi impossible.");
+    }
+    setSupportBusy(false);
+  };
+
+  const sendReply = async (messageId: string) => {
+    setSupportBusy(true);
+    try {
+      const res = await submitReply({ data: { messageId, body: replyText.trim() } });
+      flash(res.message);
+      if (res.ok) {
+        setReplyText("");
+        setReplies(await fetchReplies({ data: { messageId } }));
+      }
+    } catch {
+      flash("Réponse impossible.");
+    }
+    setSupportBusy(false);
+  };
+
+
+
+  useEffect(() => {
     setFullName(profile?.full_name ?? "");
     setPrefs(profile?.preferences ?? {});
   }, [profile?.full_name, profile?.preferences]);
