@@ -55,7 +55,6 @@ type View =
   | "notifications"
   | "terms"
   | "privacy"
-  | "support"
   | "generic";
 
 const rowBase =
@@ -159,8 +158,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   const [tickets, setTickets] = useState<SupportMessage[]>([]);
   const [replies, setReplies] = useState<SupportReply[]>([]);
   const [openTicketId, setOpenTicketId] = useState<string | null>(null);
-  const [supportSubject, setSupportSubject] = useState("");
-  const [supportBody, setSupportBody] = useState("");
   const [replyText, setReplyText] = useState("");
   const [supportBusy, setSupportBusy] = useState(false);
 
@@ -183,7 +180,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   };
 
   useEffect(() => {
-    if (view !== "support") return;
+    if (view !== "feedback") return;
     void loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
@@ -202,16 +199,15 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const sendSupport = async () => {
+  const sendReport = async () => {
     setSupportBusy(true);
     try {
       const res = await submitSupport({
-        data: { subject: supportSubject.trim(), body: supportBody.trim() },
+        data: { subject: feedbackType, body: feedbackText.trim() },
       });
       flash(res.message);
       if (res.ok) {
-        setSupportSubject("");
-        setSupportBody("");
+        setFeedbackText("");
         await loadTickets();
       }
     } catch {
@@ -338,9 +334,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                     ? t("terms")
                     : view === "privacy"
                       ? t("privacy")
-                      : view === "support"
-                        ? "Support"
-                        : genericTitle;
+                      : genericTitle;
 
   const notif = prefs.notifications ?? {};
 
