@@ -119,3 +119,45 @@ export const updateSupportStatus = createServerFn({ method: "POST" })
     if (error) return { ok: false as const, message: "Mise à jour impossible." };
     return { ok: true as const, message: "Statut mis à jour." };
   });
+
+export type SupportUpdate = {
+  ticketId: string;
+  subject: string;
+  replyId: string;
+  body: string;
+  createdAt: string;
+};
+
+/** Dernières réponses de l'équipe support sur les tickets de l'utilisateur connecté. */
+export const listSupportUpdates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<SupportUpdate[]> => {
+    const { data: mine } = await context.supabase
+      .from("support_messages")
+      .select("id, subject")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    const tickets = mine ?? [];
+    if (tickets.length === 0) return [];
+
+    const { data: rows } = await context.supabase
+      .from("support_replies")
+      .select("id, message_id, body, created_at, is_staff")
+      .in(
+        "message_id",
+        tickets.map((t) => t.id),
+      )
+      .eq("is_staff", true)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    return (rows ?? []).map((r) => ({
+      ticketId: r.message_id,
+      subject: tickets.find((t) => t.id === r.message_id)?.subject ?? "votre ticket",
+      replyId: r.id,
+      body: r.body,
+      createdAt: r.created_at,
+    }));
+  });
