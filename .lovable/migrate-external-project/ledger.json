@@ -1,0 +1,69 @@
+{
+  "source": "https://github.com/samueljusa/flash-helper.git",
+  "source_revision": "0c3c50226ce093a4a73b9478b4e43a327d06e2ac",
+  "capabilities": [
+    {
+      "capability": "application_code",
+      "source": "GitHub repository",
+      "outcome": "preserve",
+      "status": "in_progress",
+      "next_action": "Copy routes, components, assets, hooks, and server logic"
+    },
+    {
+      "capability": "authentication",
+      "source": "Lovable Cloud email and Google authentication",
+      "outcome": "preserve",
+      "status": "in_progress",
+      "next_action": "Preserve destination auth clients and enable Google login"
+    },
+    {
+      "capability": "database_schema",
+      "source": "Source SQL migrations",
+      "outcome": "preserve",
+      "status": "pending",
+      "next_action": "Apply the final schema and access policies to the destination backend"
+    },
+    {
+      "capability": "database_records",
+      "source": "No record export was included",
+      "outcome": "pending",
+      "status": "pending",
+      "next_action": "Request a separate records export if historical production data is required"
+    },
+    {
+      "capability": "media_storage",
+      "source": "Private generations and avatars buckets",
+      "outcome": "preserve",
+      "status": "pending",
+      "next_action": "Create buckets and apply per-user access policies"
+    },
+    {
+      "capability": "ai_generation",
+      "source": "Lovable AI with optional xAI and OpenRouter fallbacks",
+      "outcome": "preserve",
+      "status": "in_progress",
+      "next_action": "Keep provider fallback boundaries and verify Lovable AI generation"
+    },
+    {
+      "capability": "payments",
+      "source": "Swychr payment links and signed webhooks",
+      "outcome": "preserve",
+      "status": "blocked_configuration",
+      "next_action": "Add SWYCHR_API_KEY to verify live checkout and webhooks"
+    },
+    {
+      "capability": "mcp_server",
+      "source": "Lovable MCP tools and OAuth consent routes",
+      "outcome": "preserve",
+      "status": "pending",
+      "next_action": "Enable the OAuth server and verify MCP routes"
+    },
+    {
+      "capability": "scheduled_tasks",
+      "source": "No deployed schedule definition was bundled",
+      "outcome": "pending",
+      "status": "pending",
+      "next_action": "Confirm production schedule configuration if recurring jobs are expected"
+    }
+  ]
+}
