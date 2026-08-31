@@ -8,6 +8,7 @@ import { submitToGallery } from "@/lib/community.functions";
 import { SupportReplyNotifier } from "@/components/samflash/SupportReplyNotifier";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
 import { SettingsSheet } from "@/components/samflash/SettingsSheet";
 import { PromptBar } from "@/components/samflash/PromptBar";
 import { PlansSheet } from "@/components/samflash/PlansSheet";
@@ -39,6 +40,7 @@ function AppFeed() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { session, loading } = useAuth();
   const { quota, items, loading: feedLoading, refresh } = useGenerations(!!session);
   const submit = useServerFn(submitToGallery);
@@ -50,9 +52,9 @@ function AppFeed() {
   const share = async (id: string) => {
     try {
       await submit({ data: { id, consent: true } });
-      toast.success("Création proposée à la galerie — en attente de modération");
+      toast.success(t("shareOk"));
     } catch {
-      toast.error("Impossible de proposer cette création");
+      toast.error(t("shareErr"));
     }
   };
 
@@ -73,16 +75,16 @@ function AppFeed() {
         </div>
         <button
           type="button"
-          aria-label="Voir les abonnements"
+          aria-label={t("seePlans")}
           onClick={() => setPlansOpen(true)}
           className="ml-auto flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium"
         >
           <Sparkles className="h-4 w-4 text-primary" />
-          Abonnement
+          {t("subscriptionBtn")}
         </button>
         <button
           type="button"
-          aria-label="Ouvrir les paramètres"
+          aria-label={t("openSettings")}
           onClick={() => setSettingsOpen(true)}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary"
         >
@@ -95,7 +97,9 @@ function AppFeed() {
           {quota && quota.limit > 0 ? (
             <>
               <div className="flex items-center text-sm">
-                <span className="font-medium">Quota du jour · {TIER_LABEL[quota.tier]}</span>
+                <span className="font-medium">
+                  {t("quotaToday")} · {TIER_LABEL[quota.tier]}
+                </span>
                 <span className="ml-auto text-muted-foreground">
                   {formatSeconds(quota.used)} / {formatSeconds(quota.limit)}
                 </span>
@@ -110,7 +114,7 @@ function AppFeed() {
               </div>
             </>
           ) : quota ? (
-            <p className="text-sm text-muted-foreground">Générations illimitées sur votre offre.</p>
+            <p className="text-sm text-muted-foreground">{t("unlimited")}</p>
           ) : (
             <div className="h-10 animate-pulse rounded-xl bg-secondary/60" />
           )}
@@ -119,18 +123,18 @@ function AppFeed() {
 
       <section className="pt-6">
         <div className="flex items-center gap-2 px-4">
-          <h1 className="text-2xl font-semibold">Mes créations</h1>
+          <h1 className="text-2xl font-semibold">{t("myCreations")}</h1>
           <Link
             to="/galerie"
             className="ml-auto rounded-full bg-secondary px-3 py-1.5 text-xs font-medium"
           >
-            Galerie
+            {t("gallery")}
           </Link>
 
           <button
             type="button"
             onClick={() => void refresh()}
-            aria-label="Actualiser"
+            aria-label={t("refresh")}
             className="flex items-center gap-1 text-muted-foreground"
           >
             <ChevronRight className="h-5 w-5" />
@@ -159,13 +163,13 @@ function AppFeed() {
                   ) : (
                     <div className="flex h-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
                       {g.status === "processing"
-                        ? "Génération en cours…"
+                        ? t("processing")
                         : (g.error_message ?? g.prompt)}
                     </div>
                   )}
                   <button
                     type="button"
-                    aria-label="Proposer à la galerie communautaire"
+                    aria-label={t("shareGallery")}
                     onClick={() => void share(g.id)}
                     className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/70 backdrop-blur-md"
                   >
@@ -178,7 +182,7 @@ function AppFeed() {
               ))}
           {!feedLoading && items.length === 0 && (
             <p className="col-span-2 py-10 text-center text-sm text-muted-foreground">
-              Aucune création pour l'instant. Décrivez votre idée ci-dessous.
+              {t("emptyFeed")}
             </p>
           )}
         </div>
