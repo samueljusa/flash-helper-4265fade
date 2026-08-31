@@ -255,7 +255,9 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                     ? t("terms")
                     : view === "privacy"
                       ? t("privacy")
-                      : genericTitle;
+                      : view === "support"
+                        ? "Support"
+                        : genericTitle;
 
   const notif = prefs.notifications ?? {};
 
