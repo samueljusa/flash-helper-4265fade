@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ChevronRight, Share2, Sparkles, User } from "lucide-react";
 import { submitToGallery } from "@/lib/community.functions";
-import { getAdminAccess } from "@/lib/admin.functions";
+import { SupportReplyNotifier } from "@/components/samflash/SupportReplyNotifier";
 
 import { useAuth } from "@/hooks/useAuth";
 import { SettingsSheet } from "@/components/samflash/SettingsSheet";
@@ -42,23 +42,10 @@ function AppFeed() {
   const { session, loading } = useAuth();
   const { quota, items, loading: feedLoading, refresh } = useGenerations(!!session);
   const submit = useServerFn(submitToGallery);
-  const fetchAdminAccess = useServerFn(getAdminAccess);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) void navigate({ to: "/" });
   }, [loading, session, navigate]);
-
-  useEffect(() => {
-    if (!session) {
-      setIsAdmin(false);
-      return;
-    }
-    void fetchAdminAccess({})
-      .then((r) => setIsAdmin(r.isAdmin))
-      .catch(() => setIsAdmin(false));
-  }, [session, fetchAdminAccess]);
-
 
   const share = async (id: string) => {
     try {
@@ -69,9 +56,11 @@ function AppFeed() {
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-background pb-64" style={{ background: "var(--gradient-hero)" }}>
+    <div
+      className="min-h-screen bg-background pb-64"
+      style={{ background: "var(--gradient-hero)" }}
+    >
       <header className="sticky top-0 z-30 flex items-center gap-3 bg-background/60 px-4 py-3 backdrop-blur-xl">
         <Sparkles className="h-7 w-7 text-primary" />
         <div className="min-w-0">
@@ -131,17 +120,9 @@ function AppFeed() {
       <section className="pt-6">
         <div className="flex items-center gap-2 px-4">
           <h1 className="text-2xl font-semibold">Mes créations</h1>
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="ml-auto rounded-full bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
-            >
-              Admin
-            </Link>
-          )}
           <Link
             to="/galerie"
-            className={`${isAdmin ? "" : "ml-auto "}rounded-full bg-secondary px-3 py-1.5 text-xs font-medium`}
+            className="ml-auto rounded-full bg-secondary px-3 py-1.5 text-xs font-medium"
           >
             Galerie
           </Link>
@@ -177,7 +158,9 @@ function AppFeed() {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
-                      {g.status === "processing" ? "Génération en cours…" : g.error_message ?? g.prompt}
+                      {g.status === "processing"
+                        ? "Génération en cours…"
+                        : (g.error_message ?? g.prompt)}
                     </div>
                   )}
                   <button
@@ -206,9 +189,9 @@ function AppFeed() {
         onGenerated={() => void refresh()}
         onQuotaExceeded={() => setPlansOpen(true)}
       />
+      <SupportReplyNotifier enabled={!!session} />
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {plansOpen && <PlansSheet onClose={() => setPlansOpen(false)} />}
     </div>
   );
 }
-

@@ -13,7 +13,6 @@ import {
   Vibrate,
   Bell,
   Globe,
-
   SlidersHorizontal,
   Boxes,
   Atom,
@@ -32,7 +31,6 @@ import {
   Trash2,
   User,
   Loader2,
-
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminAccess } from "@/lib/admin.functions";
@@ -55,7 +53,6 @@ type View =
   | "notifications"
   | "terms"
   | "privacy"
-  | "support"
   | "generic";
 
 const rowBase =
@@ -159,8 +156,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   const [tickets, setTickets] = useState<SupportMessage[]>([]);
   const [replies, setReplies] = useState<SupportReply[]>([]);
   const [openTicketId, setOpenTicketId] = useState<string | null>(null);
-  const [supportSubject, setSupportSubject] = useState("");
-  const [supportBody, setSupportBody] = useState("");
   const [replyText, setReplyText] = useState("");
   const [supportBusy, setSupportBusy] = useState(false);
 
@@ -171,7 +166,9 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (!user) return;
-    void fetchAccess().then((a) => setIsStaff(a.isStaff)).catch(() => setIsStaff(false));
+    void fetchAccess()
+      .then((a) => setIsStaff(a.isStaff))
+      .catch(() => setIsStaff(false));
   }, [user, fetchAccess]);
 
   const loadTickets = async () => {
@@ -183,7 +180,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   };
 
   useEffect(() => {
-    if (view !== "support") return;
+    if (view !== "feedback") return;
     void loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
@@ -202,16 +199,15 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const sendSupport = async () => {
+  const sendReport = async () => {
     setSupportBusy(true);
     try {
       const res = await submitSupport({
-        data: { subject: supportSubject.trim(), body: supportBody.trim() },
+        data: { subject: feedbackType, body: feedbackText.trim() },
       });
       flash(res.message);
       if (res.ok) {
-        setSupportSubject("");
-        setSupportBody("");
+        setFeedbackText("");
         await loadTickets();
       }
     } catch {
@@ -234,8 +230,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
     }
     setSupportBusy(false);
   };
-
-
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -338,9 +332,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                     ? t("terms")
                     : view === "privacy"
                       ? t("privacy")
-                      : view === "support"
-                        ? "Support"
-                        : genericTitle;
+                      : genericTitle;
 
   const notif = prefs.notifications ?? {};
 
@@ -446,7 +438,11 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                   />
                 }
               />
-              <Row icon={Bell} label={t("notifications")} onClick={() => setView("notifications")} />
+              <Row
+                icon={Bell}
+                label={t("notifications")}
+                onClick={() => setView("notifications")}
+              />
               <Row
                 icon={Globe}
                 label={t("language")}
@@ -465,7 +461,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               <Row icon={Boxes} label={t("skills")} onClick={() => openGeneric(t("skills"))} />
               <Row icon={Atom} label={t("advanced")} onClick={() => openGeneric(t("advanced"))} />
             </Group>
-
 
             <SectionTitle>{t("data")}</SectionTitle>
             <Group>
@@ -500,19 +495,15 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               <Group>
                 {isStaff && (
                   <Row
-                    icon={Bug}
+                    icon={ShieldCheck}
                     label="Bureau d'administration"
+                    value="Équipe"
                     onClick={() => {
                       onClose();
                       void navigate({ to: "/admin" });
                     }}
                   />
                 )}
-                <Row
-                  icon={MessageSquare}
-                  label="Contacter le support"
-                  onClick={() => setView("support")}
-                />
                 <Row icon={LifeBuoy} label={t("report")} onClick={() => setView("feedback")} />
               </Group>
             </div>
@@ -664,8 +655,92 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               value={feedbackText}
               onChange={(e) => setFeedbackText(e.target.value)}
               placeholder="Veuillez décrire votre problème..."
-              className="mt-4 h-48 w-full resize-none rounded-2xl bg-card p-4 text-[17px] outline-none placeholder:text-muted-foreground"
+              className="mt-4 h-40 w-full resize-none rounded-2xl bg-card p-4 text-[17px] outline-none placeholder:text-muted-foreground"
             />
+            <button
+              type="button"
+              disabled={supportBusy || feedbackText.trim().length < 5}
+              onClick={() => void sendReport()}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3.5 font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {supportBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MessageSquare className="h-4 w-4" />
+              )}
+              Envoyer au support
+            </button>
+
+            <SectionTitle>Mes signalements</SectionTitle>
+            {tickets.length === 0 ? (
+              <p className="px-1 pb-4 text-sm text-muted-foreground">
+                Aucun signalement pour le moment. L'équipe vous répond directement ici.
+              </p>
+            ) : (
+              <div className="space-y-3 pb-4">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="rounded-2xl bg-card p-4">
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-3 text-left"
+                      onClick={() => void openTicket(ticket.id)}
+                    >
+                      <MessageSquareWarning className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{ticket.subject}</span>
+                        <span className="block truncate text-sm text-muted-foreground">
+                          {ticket.body}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
+                        {ticket.status}
+                      </span>
+                    </button>
+
+                    {openTicketId === ticket.id && (
+                      <div className="mt-3 border-t border-border pt-3">
+                        {replies.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Pas encore de réponse.</p>
+                        ) : (
+                          <ul className="space-y-2">
+                            {replies.map((r) => (
+                              <li
+                                key={r.id}
+                                className={`rounded-xl px-3 py-2 text-sm ${
+                                  r.is_staff ? "bg-primary/15" : "bg-secondary"
+                                }`}
+                              >
+                                <span className="block text-xs text-muted-foreground">
+                                  {r.is_staff ? "Support" : "Vous"}
+                                </span>
+                                {r.body}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Répondre…"
+                            className="flex-1 rounded-xl bg-secondary px-3 py-2 text-sm outline-none"
+                          />
+                          <button
+                            type="button"
+                            aria-label="Envoyer la réponse"
+                            disabled={supportBusy || replyText.trim().length === 0}
+                            onClick={() => void sendReply(ticket.id)}
+                            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -723,115 +798,12 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                   <span className="ml-auto">
                     <Toggle
                       on={notif[n.key] ?? false}
-                      onChange={(v) =>
-                        void savePrefs({ notifications: { ...notif, [n.key]: v } })
-                      }
+                      onChange={(v) => void savePrefs({ notifications: { ...notif, [n.key]: v } })}
                     />
                   </span>
                 </div>
               ))}
             </Group>
-          </div>
-        )}
-
-        {view === "support" && (
-          <div className="pt-4">
-            <div className="rounded-2xl bg-card p-4">
-              <p className="font-semibold">Contacter le support</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Décrivez votre problème, notre équipe vous répond directement ici.
-              </p>
-              <input
-                value={supportSubject}
-                onChange={(e) => setSupportSubject(e.target.value)}
-                placeholder="Objet"
-                className="mt-4 w-full rounded-xl bg-secondary px-4 py-3 text-[15px] outline-none"
-              />
-              <textarea
-                value={supportBody}
-                onChange={(e) => setSupportBody(e.target.value)}
-                rows={5}
-                placeholder="Votre message…"
-                className="mt-3 w-full resize-none rounded-xl bg-secondary px-4 py-3 text-[15px] outline-none"
-              />
-              <button
-                type="button"
-                disabled={supportBusy || supportSubject.trim().length < 3 || supportBody.trim().length < 5}
-                onClick={() => void sendSupport()}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 font-medium text-primary-foreground disabled:opacity-50"
-              >
-                {supportBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                Envoyer
-              </button>
-            </div>
-
-            <SectionTitle>Mes tickets</SectionTitle>
-            {tickets.length === 0 ? (
-              <p className="px-4 text-sm text-muted-foreground">Aucun ticket pour le moment.</p>
-            ) : (
-              <div className="space-y-3">
-                {tickets.map((ticket) => (
-                  <div key={ticket.id} className="rounded-2xl bg-card p-4">
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-3 text-left"
-                      onClick={() => void openTicket(ticket.id)}
-                    >
-                      <MessageSquareWarning className="h-5 w-5 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{ticket.subject}</span>
-                        <span className="block truncate text-sm text-muted-foreground">
-                          {ticket.body}
-                        </span>
-                      </span>
-                      <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
-                        {ticket.status}
-                      </span>
-                    </button>
-
-                    {openTicketId === ticket.id && (
-                      <div className="mt-3 border-t border-border pt-3">
-                        {replies.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">Pas encore de réponse.</p>
-                        ) : (
-                          <ul className="space-y-2">
-                            {replies.map((r) => (
-                              <li
-                                key={r.id}
-                                className={`rounded-xl px-3 py-2 text-sm ${
-                                  r.is_staff ? "bg-primary/15" : "bg-secondary"
-                                }`}
-                              >
-                                <span className="block text-xs text-muted-foreground">
-                                  {r.is_staff ? "Support" : "Vous"}
-                                </span>
-                                {r.body}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        <div className="mt-3 flex gap-2">
-                          <input
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Répondre…"
-                            className="flex-1 rounded-xl bg-secondary px-3 py-2 text-sm outline-none"
-                          />
-                          <button
-                            type="button"
-                            disabled={supportBusy || replyText.trim().length === 0}
-                            onClick={() => void sendReply(ticket.id)}
-                            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -843,8 +815,8 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
             <div className="rounded-2xl bg-card p-5">
               <p className="text-lg font-semibold">{genericTitle}</p>
               <p className="mt-2 text-muted-foreground">
-                Ce panneau de réglage de Sam flash 2.0 est une démonstration d'interface. Les options
-                sont affichées ici et réagissent à vos clics.
+                Ce panneau de réglage de Sam flash 2.0 est une démonstration d'interface. Les
+                options sont affichées ici et réagissent à vos clics.
               </p>
             </div>
             <div className="mt-4">
