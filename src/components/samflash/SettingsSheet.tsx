@@ -500,22 +500,19 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               <Group>
                 {isStaff && (
                   <Row
-                    icon={Bug}
+                    icon={ShieldCheck}
                     label="Bureau d'administration"
+                    value="Équipe"
                     onClick={() => {
                       onClose();
                       void navigate({ to: "/admin" });
                     }}
                   />
                 )}
-                <Row
-                  icon={MessageSquare}
-                  label="Contacter le support"
-                  onClick={() => setView("support")}
-                />
                 <Row icon={LifeBuoy} label={t("report")} onClick={() => setView("feedback")} />
               </Group>
             </div>
+
 
             <div className="mt-6">
               <Group>
