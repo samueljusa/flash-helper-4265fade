@@ -337,7 +337,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     () => ({
       lang,
       setLang,
-      t: (key: string) => DICTS[lang][key] ?? fr[key] ?? key,
+      t: (key: string) => DICTS[lang][key] ?? DICTS.fr[key] ?? key,
     }),
     [lang, setLang],
   );
