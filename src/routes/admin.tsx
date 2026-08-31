@@ -1,7 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  RefreshCw,
+  ShieldCheck,
+  Gauge,
+  Tag,
+  Users,
+  LifeBuoy,
+  CreditCard,
+  Images,
+} from "lucide-react";
 import {
   getAdminAccess,
   getAdminStats,
@@ -100,6 +110,7 @@ function AdminPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [priceNotice, setPriceNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<string>("overview");
 
   const isAdmin = roles.includes("admin");
   const canPrices = isAdmin || roles.includes("finance");
@@ -198,443 +209,512 @@ function AdminPage() {
       ]
     : [];
 
+  const sections = [
+    { id: "overview", label: "Vue d'ensemble", icon: Gauge, show: isAdmin },
+    { id: "pricing", label: "Tarifs", icon: Tag, show: canPrices },
+    { id: "team", label: "Équipe", icon: Users, show: isAdmin },
+    { id: "support", label: "Support", icon: LifeBuoy, show: canSupport },
+    { id: "orders", label: "Paiements", icon: CreditCard, show: isAdmin || roles.includes("finance") },
+    { id: "content", label: "Créations", icon: Images, show: isAdmin },
+  ].filter((s) => s.show);
+
+  const active = sections.some((s) => s.id === tab) ? tab : (sections[0]?.id ?? "overview");
+
   return (
-    <div className="min-h-screen bg-background pb-16" style={{ background: "var(--gradient-hero)" }}>
-      <header className="sticky top-0 z-30 flex items-center gap-3 bg-background/60 px-4 py-3 backdrop-blur-xl">
-        <Link
-          to="/app"
-          aria-label="Retour au studio"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-primary" />
-          <h1 className="text-lg font-semibold">Bureau d'administration</h1>
+    <div className="min-h-screen bg-background pb-24" style={{ background: "var(--gradient-hero)" }}>
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
+          <Link
+            to="/app"
+            aria-label="Retour au studio"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Espace équipe
+            </p>
+            <h1 className="truncate text-[19px] font-semibold tracking-tight">
+              Bureau d'administration
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => void load()}
+            aria-label="Actualiser"
+            className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-secondary transition-transform active:scale-95"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          aria-label="Actualiser"
-          className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </button>
+
+        {sections.length > 0 && (
+          <nav className="mx-auto max-w-5xl overflow-x-auto px-3 pb-3">
+            <div className="flex w-max gap-1 rounded-full bg-secondary/60 p-1">
+              {sections.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setTab(s.id)}
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
+                    active === s.id
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <s.icon className="h-4 w-4" />
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </nav>
+        )}
       </header>
 
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3 px-4 pt-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-secondary/60" />
-          ))}
-        </div>
-      ) : isStaff === false ? (
-        <p className="px-4 pt-16 text-center text-sm text-muted-foreground">
-          Accès réservé à l'équipe.
-        </p>
-      ) : (
-        <>
-          {roles.length > 0 && (
-            <p className="px-4 pt-4 text-xs text-muted-foreground">
-              Vos accès : {roles.filter((r) => r !== "user").map((r) => ROLE_LABEL[r as TeamRole] ?? r).join(", ")}
-            </p>
-          )}
+      <main className="mx-auto max-w-5xl px-4">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 pt-6 sm:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-3xl bg-secondary/50" />
+            ))}
+          </div>
+        ) : isStaff === false ? (
+          <p className="pt-24 text-center text-sm text-muted-foreground">
+            Accès réservé à l'équipe.
+          </p>
+        ) : (
+          <>
+            {roles.length > 0 && (
+              <p className="pt-5 text-xs text-muted-foreground">
+                Vos accès :{" "}
+                {roles
+                  .filter((r) => r !== "user")
+                  .map((r) => ROLE_LABEL[r as TeamRole] ?? r)
+                  .join(" · ")}
+              </p>
+            )}
 
-          {isAdmin && (
-            <section className="grid grid-cols-2 gap-3 px-4 pt-4">
-              {cards.map((c) => (
-                <div
-                  key={c.label}
-                  className="rounded-2xl border border-border bg-card/40 p-4 backdrop-blur-xl"
-                >
-                  <p className="text-xs text-muted-foreground">{c.label}</p>
-                  <p className="mt-1 text-2xl font-semibold">{c.value}</p>
+            {active === "overview" && isAdmin && (
+              <section className="pt-5">
+                <h2 className="text-[22px] font-semibold tracking-tight">Vue d'ensemble</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Activité en temps réel de la plateforme.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {cards.map((c) => (
+                    <div
+                      key={c.label}
+                      className="rounded-3xl border border-border/70 bg-card/50 p-5 backdrop-blur-xl"
+                    >
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {c.label}
+                      </p>
+                      <p className="mt-2 text-3xl font-semibold tracking-tight">{c.value}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </section>
-          )}
+              </section>
+            )}
 
-          {canPrices && (
-            <section className="px-4 pt-6">
-              <h2 className="text-lg font-semibold">Prix des offres (EUR)</h2>
-              <ul className="mt-3 space-y-2">
-                {prices.map((p) => (
-                  <li
-                    key={p.id}
-                    className="rounded-2xl border border-border bg-card/40 p-3 backdrop-blur-xl"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{p.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{p.tier}</p>
-                      </div>
-                      <label className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={p.active}
-                          onChange={(e) =>
-                            setPrices((prev) =>
-                              prev.map((r) =>
-                                r.id === p.id ? { ...r, active: e.target.checked } : r,
-                              ),
-                            )
-                          }
-                        />
-                        Actif
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => void commitPrice(p)}
-                        className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background"
-                      >
-                        Enregistrer
-                      </button>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      <label className="text-[11px] text-muted-foreground">
-                        Mensuel (€)
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          aria-label={`Prix mensuel en euros pour ${p.label}`}
-                          value={p.amount_eur}
-                          onChange={(e) =>
-                            setPrices((prev) =>
-                              prev.map((r) =>
-                                r.id === p.id ? { ...r, amount_eur: Number(e.target.value) } : r,
-                              ),
-                            )
-                          }
-                          className="mt-1 w-full rounded-xl border border-border bg-background/60 px-3 py-2 text-right text-foreground"
-                        />
-                      </label>
-                      <label className="text-[11px] text-muted-foreground">
-                        Annuel (€)
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          aria-label={`Prix annuel en euros pour ${p.label}`}
-                          value={p.amount_eur_yearly ?? ""}
-                          onChange={(e) =>
-                            setPrices((prev) =>
-                              prev.map((r) =>
-                                r.id === p.id
-                                  ? {
-                                      ...r,
-                                      amount_eur_yearly:
-                                        e.target.value === "" ? null : Number(e.target.value),
-                                    }
-                                  : r,
-                              ),
-                            )
-                          }
-                          className="mt-1 w-full rounded-xl border border-border bg-background/60 px-3 py-2 text-right text-foreground"
-                        />
-                      </label>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {priceNotice && <p className="mt-2 text-sm text-primary">{priceNotice}</p>}
-            </section>
-          )}
-
-          {isAdmin && (
-            <section className="px-4 pt-6">
-              <h2 className="text-lg font-semibold">Collaborateurs</h2>
-              <div className="mt-3 rounded-2xl border border-border bg-card/40 p-3 backdrop-blur-xl">
-                <label htmlFor="inv-email" className="text-xs text-muted-foreground">
-                  Inviter par e-mail
-                </label>
-                <input
-                  id="inv-email"
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="collaborateur@exemple.com"
-                  className="mt-1 w-full rounded-xl border border-border bg-background/60 px-3 py-2"
-                />
-                <div className="mt-2 flex items-center gap-2">
-                  <select
-                    aria-label="Rôle du collaborateur"
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as TeamRole)}
-                    className="rounded-xl border border-border bg-background/60 px-3 py-2 text-sm"
-                  >
-                    {(Object.keys(ROLE_LABEL) as TeamRole[]).map((r) => (
-                      <option key={r} value={r}>
-                        {ROLE_LABEL[r]}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void invite({ data: { email: inviteEmail.trim(), role: inviteRole } })
-                        .then((r) => {
-                          setNotice(r.message);
-                          if (r.ok) setInviteEmail("");
-                          return load();
-                        })
-                        .catch(() => setNotice("Invitation impossible."))
-                    }
-                    disabled={inviteEmail.trim().length < 5}
-                    className="ml-auto rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-50"
-                  >
-                    Inviter
-                  </button>
-                </div>
-                {notice && <p className="mt-2 text-xs text-primary">{notice}</p>}
-              </div>
-
-              <ul className="mt-3 space-y-2">
-                {members.map((m) => (
-                  <li
-                    key={m.user_id}
-                    className="rounded-2xl border border-border bg-card/40 p-3 text-sm backdrop-blur-xl"
-                  >
-                    <p className="truncate font-medium">{m.email ?? m.full_name ?? m.user_id}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {m.roles.map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() =>
-                            void revoke({ data: { userId: m.user_id, role: r } })
-                              .then((res) => {
-                                setNotice(res.message);
-                                return load();
-                              })
-                              .catch(() => setNotice("Retrait impossible."))
-                          }
-                          className="rounded-full bg-secondary px-3 py-1 text-[11px]"
-                          aria-label={`Retirer le rôle ${ROLE_LABEL[r]} à ${m.email ?? m.user_id}`}
-                        >
-                          {ROLE_LABEL[r]} ✕
-                        </button>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-                {members.length === 0 && (
-                  <li className="py-4 text-center text-sm text-muted-foreground">
-                    Aucun collaborateur.
-                  </li>
-                )}
-              </ul>
-
-              {invites.filter((i) => !i.accepted_at).length > 0 && (
-                <>
-                  <h3 className="mt-4 text-sm font-medium text-muted-foreground">
-                    Invitations en attente
-                  </h3>
-                  <ul className="mt-2 space-y-2">
-                    {invites
-                      .filter((i) => !i.accepted_at)
-                      .map((i) => (
-                        <li
-                          key={i.id}
-                          className="flex items-center gap-2 rounded-2xl border border-border bg-card/40 p-3 text-sm backdrop-blur-xl"
-                        >
-                          <span className="truncate">{i.email}</span>
-                          <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
-                            {ROLE_LABEL[i.role]}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void cancelInvite({ data: { id: i.id } })
-                                .then((r) => {
-                                  setNotice(r.message);
-                                  return load();
-                                })
-                                .catch(() => setNotice("Annulation impossible."))
+            {active === "pricing" && canPrices && (
+              <section className="pt-5">
+                <h2 className="text-[22px] font-semibold tracking-tight">Tarifs des offres</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Montants en euros, convertis automatiquement à l'achat.
+                </p>
+                <ul className="mt-4 space-y-3">
+                  {prices.map((p) => (
+                    <li
+                      key={p.id}
+                      className="rounded-3xl border border-border/70 bg-card/50 p-5 backdrop-blur-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-[17px] font-medium">{p.label}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                            {p.tier}
+                          </p>
+                        </div>
+                        <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            checked={p.active}
+                            onChange={(e) =>
+                              setPrices((prev) =>
+                                prev.map((r) =>
+                                  r.id === p.id ? { ...r, active: e.target.checked } : r,
+                                ),
+                              )
                             }
-                            className="ml-auto text-[11px] text-destructive"
-                          >
-                            Annuler
-                          </button>
-                        </li>
-                      ))}
-                  </ul>
-                </>
-              )}
-            </section>
-          )}
+                          />
+                          Actif
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => void commitPrice(p)}
+                          className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition-transform active:scale-95"
+                        >
+                          Enregistrer
+                        </button>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <label className="text-[11px] text-muted-foreground">
+                          Mensuel (€)
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            aria-label={`Prix mensuel en euros pour ${p.label}`}
+                            value={p.amount_eur}
+                            onChange={(e) =>
+                              setPrices((prev) =>
+                                prev.map((r) =>
+                                  r.id === p.id ? { ...r, amount_eur: Number(e.target.value) } : r,
+                                ),
+                              )
+                            }
+                            className="mt-1 w-full rounded-2xl border border-border bg-background/60 px-3 py-2.5 text-right text-foreground"
+                          />
+                        </label>
+                        <label className="text-[11px] text-muted-foreground">
+                          Annuel (€)
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            aria-label={`Prix annuel en euros pour ${p.label}`}
+                            value={p.amount_eur_yearly ?? ""}
+                            onChange={(e) =>
+                              setPrices((prev) =>
+                                prev.map((r) =>
+                                  r.id === p.id
+                                    ? {
+                                        ...r,
+                                        amount_eur_yearly:
+                                          e.target.value === "" ? null : Number(e.target.value),
+                                      }
+                                    : r,
+                                ),
+                              )
+                            }
+                            className="mt-1 w-full rounded-2xl border border-border bg-background/60 px-3 py-2.5 text-right text-foreground"
+                          />
+                        </label>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {priceNotice && <p className="mt-3 text-sm text-primary">{priceNotice}</p>}
+              </section>
+            )}
 
-          {canSupport && (
-            <section className="px-4 pt-6">
-              <h2 className="text-lg font-semibold">Boîte de support</h2>
-              <ul className="mt-3 space-y-2">
-                {tickets.map((tkt) => (
-                  <li
-                    key={tkt.id}
-                    className="rounded-2xl border border-border bg-card/40 p-3 text-sm backdrop-blur-xl"
-                  >
+            {active === "team" && isAdmin && (
+              <section className="pt-5">
+                <h2 className="text-[22px] font-semibold tracking-tight">Collaborateurs</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Invitez votre équipe et gérez les rôles.
+                </p>
+                <div className="mt-4 rounded-3xl border border-border/70 bg-card/50 p-5 backdrop-blur-xl">
+                  <label htmlFor="inv-email" className="text-xs text-muted-foreground">
+                    Inviter par e-mail
+                  </label>
+                  <input
+                    id="inv-email"
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="collaborateur@exemple.com"
+                    className="mt-1 w-full rounded-2xl border border-border bg-background/60 px-4 py-3"
+                  />
+                  <div className="mt-3 flex items-center gap-2">
+                    <select
+                      aria-label="Rôle du collaborateur"
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value as TeamRole)}
+                      className="rounded-2xl border border-border bg-background/60 px-3 py-2.5 text-sm"
+                    >
+                      {(Object.keys(ROLE_LABEL) as TeamRole[]).map((r) => (
+                        <option key={r} value={r}>
+                          {ROLE_LABEL[r]}
+                        </option>
+                      ))}
+                    </select>
                     <button
                       type="button"
-                      onClick={() => void openThread(tkt.id)}
-                      className="flex w-full items-center gap-2 text-left"
+                      onClick={() =>
+                        void invite({ data: { email: inviteEmail.trim(), role: inviteRole } })
+                          .then((r) => {
+                            setNotice(r.message);
+                            if (r.ok) setInviteEmail("");
+                            return load();
+                          })
+                          .catch(() => setNotice("Invitation impossible."))
+                      }
+                      disabled={inviteEmail.trim().length < 5}
+                      className="ml-auto rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background disabled:opacity-50"
                     >
-                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
-                        {tkt.status}
-                      </span>
-                      <span className="truncate font-medium">{tkt.subject}</span>
-                      <span className="ml-auto text-[11px] text-muted-foreground">
-                        {new Date(tkt.created_at).toLocaleDateString("fr-FR")}
-                      </span>
+                      Inviter
                     </button>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{tkt.email}</p>
+                  </div>
+                  {notice && <p className="mt-2 text-xs text-primary">{notice}</p>}
+                </div>
 
-                    {openTicket === tkt.id && (
-                      <div className="mt-2 border-t border-border pt-2">
-                        <p className="whitespace-pre-wrap">{tkt.body}</p>
-                        <ul className="mt-2 space-y-1">
-                          {replies.map((r) => (
-                            <li
-                              key={r.id}
-                              className={`rounded-xl px-3 py-2 text-[13px] ${r.is_staff ? "bg-primary/10" : "bg-secondary"}`}
-                            >
-                              <span className="text-[10px] text-muted-foreground">
-                                {r.is_staff ? "Équipe" : "Client"}
-                              </span>
-                              <p className="whitespace-pre-wrap">{r.body}</p>
-                            </li>
-                          ))}
-                        </ul>
-                        <textarea
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          aria-label="Votre réponse"
-                          rows={3}
-                          placeholder="Répondre au client…"
-                          className="mt-2 w-full rounded-xl border border-border bg-background/60 px-3 py-2"
-                        />
-                        <div className="mt-2 flex items-center gap-2">
+                <ul className="mt-3 space-y-2">
+                  {members.map((m) => (
+                    <li
+                      key={m.user_id}
+                      className="rounded-3xl border border-border/70 bg-card/50 p-4 text-sm backdrop-blur-xl"
+                    >
+                      <p className="truncate font-medium">{m.email ?? m.full_name ?? m.user_id}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {m.roles.map((r) => (
                           <button
-                            type="button"
-                            disabled={replyText.trim().length === 0}
-                            onClick={() =>
-                              void sendReply({
-                                data: { messageId: tkt.id, body: replyText.trim() },
-                              }).then(async () => {
-                                setReplyText("");
-                                setReplies(
-                                  (await fetchReplies({
-                                    data: { messageId: tkt.id },
-                                  })) as SupportReply[],
-                                );
-                                await load();
-                                setOpenTicket(tkt.id);
-                              })
-                            }
-                            className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-50"
-                          >
-                            Répondre
-                          </button>
-                          <button
+                            key={r}
                             type="button"
                             onClick={() =>
-                              void setTicketStatus({
-                                data: { messageId: tkt.id, status: "resolu" },
-                              }).then(() => load())
+                              void revoke({ data: { userId: m.user_id, role: r } })
+                                .then((res) => {
+                                  setNotice(res.message);
+                                  return load();
+                                })
+                                .catch(() => setNotice("Retrait impossible."))
                             }
-                            className="rounded-full bg-secondary px-4 py-2 text-xs"
+                            className="rounded-full bg-secondary px-3 py-1 text-[11px]"
+                            aria-label={`Retirer le rôle ${ROLE_LABEL[r]} à ${m.email ?? m.user_id}`}
                           >
-                            Marquer résolu
+                            {ROLE_LABEL[r]} ✕
                           </button>
-                        </div>
+                        ))}
                       </div>
-                    )}
-                  </li>
-                ))}
-                {tickets.length === 0 && (
-                  <li className="py-4 text-center text-sm text-muted-foreground">
-                    Aucun message de support.
-                  </li>
+                    </li>
+                  ))}
+                  {members.length === 0 && (
+                    <li className="py-6 text-center text-sm text-muted-foreground">
+                      Aucun collaborateur.
+                    </li>
+                  )}
+                </ul>
+
+                {invites.filter((i) => !i.accepted_at).length > 0 && (
+                  <>
+                    <h3 className="mt-6 text-sm font-medium text-muted-foreground">
+                      Invitations en attente
+                    </h3>
+                    <ul className="mt-2 space-y-2">
+                      {invites
+                        .filter((i) => !i.accepted_at)
+                        .map((i) => (
+                          <li
+                            key={i.id}
+                            className="flex items-center gap-2 rounded-3xl border border-border/70 bg-card/50 p-4 text-sm backdrop-blur-xl"
+                          >
+                            <span className="truncate">{i.email}</span>
+                            <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
+                              {ROLE_LABEL[i.role]}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void cancelInvite({ data: { id: i.id } })
+                                  .then((r) => {
+                                    setNotice(r.message);
+                                    return load();
+                                  })
+                                  .catch(() => setNotice("Annulation impossible."))
+                              }
+                              className="ml-auto text-[11px] text-destructive"
+                            >
+                              Annuler
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  </>
                 )}
-              </ul>
-            </section>
-          )}
+              </section>
+            )}
 
-          {(isAdmin || roles.includes("finance")) && orders.length > 0 && (
-            <section className="px-4 pt-6">
-              <h2 className="text-lg font-semibold">Commandes récentes</h2>
-              <ul className="mt-3 space-y-2">
-                {orders.map((o) => (
-                  <li
-                    key={o.transaction_id}
-                    className="rounded-2xl border border-border bg-card/40 p-3 text-sm backdrop-blur-xl"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
-                        {o.status}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {o.country_code} · {o.payment_method}
-                      </span>
-                      <span className="ml-auto text-[11px] text-muted-foreground">
-                        {new Date(o.created_at).toLocaleString("fr-FR")}
-                      </span>
-                    </div>
-                    <p className="mt-1 truncate">{o.customer_email}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {o.amount_local} {o.currency} · {o.amount_eur.toFixed(2)} €
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {isAdmin && (
-            <section className="px-4 pt-6">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold">Générations récentes</h2>
-                <Link
-                  to="/galerie"
-                  className="ml-auto rounded-full bg-secondary px-3 py-1.5 text-xs font-medium"
-                >
-                  Modération
-                </Link>
-              </div>
-              <ul className="mt-3 space-y-2">
-                {items.map((g) => (
-                  <li
-                    key={g.id}
-                    className="rounded-2xl border border-border bg-card/40 p-3 text-sm backdrop-blur-xl"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] uppercase">
-                        {g.media_type}
-                      </span>
-                      <span
-                        className={`text-[11px] ${g.status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+            {active === "support" && canSupport && (
+              <section className="pt-5">
+                <h2 className="text-[22px] font-semibold tracking-tight">Boîte de support</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Chaque réponse déclenche une notification chez le client.
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {tickets.map((tkt) => (
+                    <li
+                      key={tkt.id}
+                      className="rounded-3xl border border-border/70 bg-card/50 p-4 text-sm backdrop-blur-xl"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => void openThread(tkt.id)}
+                        className="flex w-full items-center gap-2 text-left"
                       >
-                        {g.status}
-                      </span>
-                      <span className="ml-auto text-[11px] text-muted-foreground">
-                        {new Date(g.created_at).toLocaleString("fr-FR")}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2">{g.prompt}</p>
-                    {g.error_message && (
-                      <p className="mt-1 text-[11px] text-destructive">{g.error_message}</p>
-                    )}
-                  </li>
-                ))}
-                {items.length === 0 && (
-                  <li className="py-10 text-center text-sm text-muted-foreground">
-                    Aucune génération enregistrée.
-                  </li>
-                )}
-              </ul>
-            </section>
-          )}
-        </>
-      )}
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
+                          {tkt.status}
+                        </span>
+                        <span className="truncate font-medium">{tkt.subject}</span>
+                        <span className="ml-auto text-[11px] text-muted-foreground">
+                          {new Date(tkt.created_at).toLocaleDateString("fr-FR")}
+                        </span>
+                      </button>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{tkt.email}</p>
+
+                      {openTicket === tkt.id && (
+                        <div className="mt-3 border-t border-border pt-3">
+                          <p className="whitespace-pre-wrap">{tkt.body}</p>
+                          <ul className="mt-2 space-y-1">
+                            {replies.map((r) => (
+                              <li
+                                key={r.id}
+                                className={`rounded-2xl px-3 py-2 text-[13px] ${r.is_staff ? "bg-primary/10" : "bg-secondary"}`}
+                              >
+                                <span className="text-[10px] text-muted-foreground">
+                                  {r.is_staff ? "Équipe" : "Client"}
+                                </span>
+                                <p className="whitespace-pre-wrap">{r.body}</p>
+                              </li>
+                            ))}
+                          </ul>
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            aria-label="Votre réponse"
+                            rows={3}
+                            placeholder="Répondre au client…"
+                            className="mt-2 w-full rounded-2xl border border-border bg-background/60 px-3 py-2"
+                          />
+                          <div className="mt-2 flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={replyText.trim().length === 0}
+                              onClick={() =>
+                                void sendReply({
+                                  data: { messageId: tkt.id, body: replyText.trim() },
+                                }).then(async () => {
+                                  setReplyText("");
+                                  setReplies(
+                                    (await fetchReplies({
+                                      data: { messageId: tkt.id },
+                                    })) as SupportReply[],
+                                  );
+                                  await load();
+                                  setOpenTicket(tkt.id);
+                                })
+                              }
+                              className="rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background disabled:opacity-50"
+                            >
+                              Répondre
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void setTicketStatus({
+                                  data: { messageId: tkt.id, status: "resolu" },
+                                }).then(() => load())
+                              }
+                              className="rounded-full bg-secondary px-5 py-2.5 text-xs"
+                            >
+                              Marquer résolu
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                  {tickets.length === 0 && (
+                    <li className="py-6 text-center text-sm text-muted-foreground">
+                      Aucun message de support.
+                    </li>
+                  )}
+                </ul>
+              </section>
+            )}
+
+            {active === "orders" && (
+              <section className="pt-5">
+                <h2 className="text-[22px] font-semibold tracking-tight">Paiements récents</h2>
+                <ul className="mt-4 space-y-2">
+                  {orders.map((o) => (
+                    <li
+                      key={o.transaction_id}
+                      className="rounded-3xl border border-border/70 bg-card/50 p-4 text-sm backdrop-blur-xl"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
+                          {o.status}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {o.country_code} · {o.payment_method}
+                        </span>
+                        <span className="ml-auto text-[11px] text-muted-foreground">
+                          {new Date(o.created_at).toLocaleString("fr-FR")}
+                        </span>
+                      </div>
+                      <p className="mt-1 truncate">{o.customer_email}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {o.amount_local} {o.currency} · {o.amount_eur.toFixed(2)} €
+                      </p>
+                    </li>
+                  ))}
+                  {orders.length === 0 && (
+                    <li className="py-6 text-center text-sm text-muted-foreground">
+                      Aucune commande enregistrée.
+                    </li>
+                  )}
+                </ul>
+              </section>
+            )}
+
+            {active === "content" && isAdmin && (
+              <section className="pt-5">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[22px] font-semibold tracking-tight">Créations récentes</h2>
+                  <Link
+                    to="/galerie"
+                    className="ml-auto rounded-full bg-secondary px-4 py-2 text-xs font-medium"
+                  >
+                    Modération
+                  </Link>
+                </div>
+                <ul className="mt-4 space-y-2">
+                  {items.map((g) => (
+                    <li
+                      key={g.id}
+                      className="rounded-3xl border border-border/70 bg-card/50 p-4 text-sm backdrop-blur-xl"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] uppercase">
+                          {g.media_type}
+                        </span>
+                        <span
+                          className={`text-[11px] ${g.status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                        >
+                          {g.status}
+                        </span>
+                        <span className="ml-auto text-[11px] text-muted-foreground">
+                          {new Date(g.created_at).toLocaleString("fr-FR")}
+                        </span>
+                      </div>
+                      <p className="mt-1 line-clamp-2">{g.prompt}</p>
+                      {g.error_message && (
+                        <p className="mt-1 text-[11px] text-destructive">{g.error_message}</p>
+                      )}
+                    </li>
+                  ))}
+                  {items.length === 0 && (
+                    <li className="py-10 text-center text-sm text-muted-foreground">
+                      Aucune génération enregistrée.
+                    </li>
+                  )}
+                </ul>
+              </section>
+            )}
+          </>
+        )}
+      </main>
     </div>
   );
 }
