@@ -42,22 +42,11 @@ function AppFeed() {
   const { session, loading } = useAuth();
   const { quota, items, loading: feedLoading, refresh } = useGenerations(!!session);
   const submit = useServerFn(submitToGallery);
-  const fetchAdminAccess = useServerFn(getAdminAccess);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) void navigate({ to: "/" });
   }, [loading, session, navigate]);
 
-  useEffect(() => {
-    if (!session) {
-      setIsAdmin(false);
-      return;
-    }
-    void fetchAdminAccess({})
-      .then((r) => setIsAdmin(r.isAdmin))
-      .catch(() => setIsAdmin(false));
-  }, [session, fetchAdminAccess]);
 
 
   const share = async (id: string) => {
