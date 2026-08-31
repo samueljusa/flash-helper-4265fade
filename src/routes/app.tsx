@@ -131,20 +131,13 @@ function AppFeed() {
       <section className="pt-6">
         <div className="flex items-center gap-2 px-4">
           <h1 className="text-2xl font-semibold">Mes créations</h1>
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="ml-auto rounded-full bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
-            >
-              Admin
-            </Link>
-          )}
           <Link
             to="/galerie"
-            className={`${isAdmin ? "" : "ml-auto "}rounded-full bg-secondary px-3 py-1.5 text-xs font-medium`}
+            className="ml-auto rounded-full bg-secondary px-3 py-1.5 text-xs font-medium"
           >
             Galerie
           </Link>
+
 
           <button
             type="button"
