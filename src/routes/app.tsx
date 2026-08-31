@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ChevronRight, Share2, Sparkles, User } from "lucide-react";
 import { submitToGallery } from "@/lib/community.functions";
-import { getAdminAccess } from "@/lib/admin.functions";
+import { SupportReplyNotifier } from "@/components/samflash/SupportReplyNotifier";
 
 import { useAuth } from "@/hooks/useAuth";
 import { SettingsSheet } from "@/components/samflash/SettingsSheet";
@@ -188,6 +188,7 @@ function AppFeed() {
         onGenerated={() => void refresh()}
         onQuotaExceeded={() => setPlansOpen(true)}
       />
+      <SupportReplyNotifier enabled={!!session} />
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {plansOpen && <PlansSheet onClose={() => setPlansOpen(false)} />}
     </div>
