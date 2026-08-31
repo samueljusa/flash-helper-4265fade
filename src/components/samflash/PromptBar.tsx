@@ -3,6 +3,7 @@ import { Plus, Image as ImageIcon, Video, Smile, ArrowUp, Loader2 } from "lucide
 import { useServerFn } from "@tanstack/react-start";
 import { generateMedia } from "@/lib/generation.functions";
 import { formatSeconds } from "@/lib/quota";
+import { useI18n } from "@/lib/i18n";
 
 const chip = (active: boolean) =>
   `shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
+  const { t } = useI18n();
   const [res, setRes] = useState("720p");
   const [dur, setDur] = useState("6s");
   const [ratio, setRatio] = useState("2:3");
@@ -33,8 +35,8 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
     setBusy(true);
     setSent(
       mode === "video"
-        ? `Génération vidéo ${res} · ${dur} · ${ratio}…`
-        : `Génération image ${res} · ${ratio}…`,
+        ? `${t("video")} ${res} · ${dur} · ${ratio}…`
+        : `${t("image")} ${res} · ${ratio}…`,
     );
     try {
       const result = await generate({
@@ -42,17 +44,17 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
       });
       if (result.ok) {
         setText("");
-        setSent("Génération terminée");
+        setSent(t("genDone"));
         onGenerated?.();
       } else if (result.reason === "quota") {
 
-        setSent("Quota journalier atteint");
+        setSent(t("quotaReached"));
         onQuotaExceeded?.();
       } else {
-        setSent(result.message ?? "Génération impossible");
+        setSent(result.message ?? t("genFail"));
       }
     } catch (error) {
-      setSent(error instanceof Error ? error.message : "Génération impossible");
+      setSent(error instanceof Error ? error.message : t("genFail"));
     } finally {
       setBusy(false);
       setTimeout(() => setSent(null), 2600);
@@ -106,7 +108,7 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
             if (e.key === "Enter") void submit();
           }}
           placeholder={
-            mode === "video" ? "Décrivez la vidéo à créer (Généré par l'IA)" : "Décrivez l'image à créer"
+            t("promptPlaceholder")
           }
           className="w-full bg-transparent px-2 pb-3 text-[17px] outline-none placeholder:text-muted-foreground"
         />
@@ -131,7 +133,7 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
               }`}
             >
               <ImageIcon className="h-5 w-5" />
-              {mode === "image" && <span className="text-sm font-medium">Image</span>}
+              {mode === "image" && <span className="text-sm font-medium">{t("image")}</span>}
             </button>
             <button
               type="button"
@@ -145,7 +147,7 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
               }`}
             >
               <Video className="h-5 w-5" />
-              {mode === "video" && <span className="text-sm font-medium">Vidéo</span>}
+              {mode === "video" && <span className="text-sm font-medium">{t("video")}</span>}
             </button>
             <button
               type="button"
@@ -157,7 +159,7 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
           </div>
           <button
             type="button"
-            aria-label="Envoyer"
+            aria-label={t("send")}
             onClick={() => void submit()}
             className="ml-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
             disabled={!text.trim() || busy}
