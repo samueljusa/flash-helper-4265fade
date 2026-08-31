@@ -13,7 +13,6 @@ import {
   Vibrate,
   Bell,
   Globe,
-
   SlidersHorizontal,
   Boxes,
   Atom,
@@ -32,7 +31,6 @@ import {
   Trash2,
   User,
   Loader2,
-
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminAccess } from "@/lib/admin.functions";
@@ -168,7 +166,9 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (!user) return;
-    void fetchAccess().then((a) => setIsStaff(a.isStaff)).catch(() => setIsStaff(false));
+    void fetchAccess()
+      .then((a) => setIsStaff(a.isStaff))
+      .catch(() => setIsStaff(false));
   }, [user, fetchAccess]);
 
   const loadTickets = async () => {
@@ -230,8 +230,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
     }
     setSupportBusy(false);
   };
-
-
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -440,7 +438,11 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                   />
                 }
               />
-              <Row icon={Bell} label={t("notifications")} onClick={() => setView("notifications")} />
+              <Row
+                icon={Bell}
+                label={t("notifications")}
+                onClick={() => setView("notifications")}
+              />
               <Row
                 icon={Globe}
                 label={t("language")}
@@ -459,7 +461,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               <Row icon={Boxes} label={t("skills")} onClick={() => openGeneric(t("skills"))} />
               <Row icon={Atom} label={t("advanced")} onClick={() => openGeneric(t("advanced"))} />
             </Group>
-
 
             <SectionTitle>{t("data")}</SectionTitle>
             <Group>
@@ -506,7 +507,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                 <Row icon={LifeBuoy} label={t("report")} onClick={() => setView("feedback")} />
               </Group>
             </div>
-
 
             <div className="mt-6">
               <Group>
@@ -744,7 +744,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-
         {view === "appearance" && (
           <div className="pt-6">
             <Group>
@@ -799,9 +798,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                   <span className="ml-auto">
                     <Toggle
                       on={notif[n.key] ?? false}
-                      onChange={(v) =>
-                        void savePrefs({ notifications: { ...notif, [n.key]: v } })
-                      }
+                      onChange={(v) => void savePrefs({ notifications: { ...notif, [n.key]: v } })}
                     />
                   </span>
                 </div>
@@ -809,7 +806,6 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
             </Group>
           </div>
         )}
-
 
         {view === "terms" && <LegalView doc={TERMS} />}
         {view === "privacy" && <LegalView doc={PRIVACY} />}
@@ -819,8 +815,8 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
             <div className="rounded-2xl bg-card p-5">
               <p className="text-lg font-semibold">{genericTitle}</p>
               <p className="mt-2 text-muted-foreground">
-                Ce panneau de réglage de Sam flash 2.0 est une démonstration d'interface. Les options
-                sont affichées ici et réagissent à vos clics.
+                Ce panneau de réglage de Sam flash 2.0 est une démonstration d'interface. Les
+                options sont affichées ici et réagissent à vos clics.
               </p>
             </div>
             <div className="mt-4">

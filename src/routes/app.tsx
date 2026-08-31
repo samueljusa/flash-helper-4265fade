@@ -47,8 +47,6 @@ function AppFeed() {
     if (!loading && !session) void navigate({ to: "/" });
   }, [loading, session, navigate]);
 
-
-
   const share = async (id: string) => {
     try {
       await submit({ data: { id, consent: true } });
@@ -58,9 +56,11 @@ function AppFeed() {
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-background pb-64" style={{ background: "var(--gradient-hero)" }}>
+    <div
+      className="min-h-screen bg-background pb-64"
+      style={{ background: "var(--gradient-hero)" }}
+    >
       <header className="sticky top-0 z-30 flex items-center gap-3 bg-background/60 px-4 py-3 backdrop-blur-xl">
         <Sparkles className="h-7 w-7 text-primary" />
         <div className="min-w-0">
@@ -127,7 +127,6 @@ function AppFeed() {
             Galerie
           </Link>
 
-
           <button
             type="button"
             onClick={() => void refresh()}
@@ -159,7 +158,9 @@ function AppFeed() {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
-                      {g.status === "processing" ? "Génération en cours…" : g.error_message ?? g.prompt}
+                      {g.status === "processing"
+                        ? "Génération en cours…"
+                        : (g.error_message ?? g.prompt)}
                     </div>
                   )}
                   <button
@@ -194,4 +195,3 @@ function AppFeed() {
     </div>
   );
 }
-

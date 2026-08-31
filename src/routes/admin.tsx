@@ -214,14 +214,22 @@ function AdminPage() {
     { id: "pricing", label: "Tarifs", icon: Tag, show: canPrices },
     { id: "team", label: "Équipe", icon: Users, show: isAdmin },
     { id: "support", label: "Support", icon: LifeBuoy, show: canSupport },
-    { id: "orders", label: "Paiements", icon: CreditCard, show: isAdmin || roles.includes("finance") },
+    {
+      id: "orders",
+      label: "Paiements",
+      icon: CreditCard,
+      show: isAdmin || roles.includes("finance"),
+    },
     { id: "content", label: "Créations", icon: Images, show: isAdmin },
   ].filter((s) => s.show);
 
   const active = sections.some((s) => s.id === tab) ? tab : (sections[0]?.id ?? "overview");
 
   return (
-    <div className="min-h-screen bg-background pb-24" style={{ background: "var(--gradient-hero)" }}>
+    <div
+      className="min-h-screen bg-background pb-24"
+      style={{ background: "var(--gradient-hero)" }}
+    >
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <Link
@@ -258,9 +266,7 @@ function AdminPage() {
                   type="button"
                   onClick={() => setTab(s.id)}
                   className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
-                    active === s.id
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground"
+                    active === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                   }`}
                 >
                   <s.icon className="h-4 w-4" />
