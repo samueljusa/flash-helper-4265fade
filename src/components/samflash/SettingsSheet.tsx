@@ -238,6 +238,19 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
     setPrefs(profile?.preferences ?? {});
   }, [profile?.full_name, profile?.preferences]);
 
+  // Restore the saved theme/language from the account so they follow the user.
+  useEffect(() => {
+    const savedTheme = profile?.preferences?.theme;
+    if (savedTheme && (THEMES as readonly string[]).includes(savedTheme) && savedTheme !== theme) {
+      setTheme(savedTheme as ThemeName);
+    }
+    const savedLang = profile?.preferences?.lang;
+    if (savedLang && savedLang !== lang && LANGUAGES.some((l) => l.code === savedLang)) {
+      setLang(savedLang as LangCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.preferences?.theme, profile?.preferences?.lang]);
+
   useEffect(() => {
     const path = profile?.avatar_url;
     if (!path) {
@@ -825,20 +838,127 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
 
         {view === "generic" && (
           <div className="pt-6">
-            <div className="rounded-2xl bg-card p-5">
-              <p className="text-lg font-semibold">{genericTitle}</p>
-              <p className="mt-2 text-muted-foreground">
-                Ce panneau de réglage de Sam flash 2.0 est une démonstration d'interface. Les
-                options sont affichées ici et réagissent à vos clics.
-              </p>
-            </div>
-            <div className="mt-4">
+            {genericKey === "customize" && (
+              <>
+                <p className="px-1 text-sm text-muted-foreground">{t("customizeSub")}</p>
+                <div className="mt-4">
+                  <Group>
+                    <div className="px-4 py-3.5">
+                      <span className="text-[17px]">{t("tone")}</span>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {["Naturel", "Cinématique", "Créatif", "Précis"].map((tone) => (
+                          <button
+                            key={tone}
+                            type="button"
+                            onClick={() => {
+                              void savePrefs({ tone });
+                              flash(t("optionSaved"));
+                            }}
+                            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                              (prefs.tone ?? "Naturel") === tone
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-muted-foreground"
+                            }`}
+                          >
+                            {tone}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <SettingToggle
+                      label={t("autoEnhance")}
+                      on={optionOn("autoEnhance", true)}
+                      onChange={(v) => setOption("autoEnhance", v)}
+                    />
+                    <SettingToggle
+                      label={t("memory")}
+                      on={optionOn("memory", true)}
+                      onChange={(v) => setOption("memory", v)}
+                    />
+                    <SettingToggle
+                      label={t("voiceMode")}
+                      on={optionOn("voiceMode")}
+                      onChange={(v) => setOption("voiceMode", v)}
+                    />
+                  </Group>
+                </div>
+              </>
+            )}
+
+            {genericKey === "skills" && (
+              <>
+                <p className="px-1 text-sm text-muted-foreground">{t("skillsSub")}</p>
+                <div className="mt-4">
+                  <Group>
+                    <SettingToggle
+                      label={t("skillImage")}
+                      on={optionOn("skillImage", true)}
+                      onChange={(v) => setOption("skillImage", v)}
+                    />
+                    <SettingToggle
+                      label={t("skillVideo")}
+                      on={optionOn("skillVideo", true)}
+                      onChange={(v) => setOption("skillVideo", v)}
+                    />
+                    <SettingToggle
+                      label={t("skillTranslate")}
+                      on={optionOn("skillTranslate")}
+                      onChange={(v) => setOption("skillTranslate", v)}
+                    />
+                    <SettingToggle
+                      label={t("skillIdeas")}
+                      on={optionOn("skillIdeas", true)}
+                      onChange={(v) => setOption("skillIdeas", v)}
+                    />
+                  </Group>
+                </div>
+              </>
+            )}
+
+            {genericKey === "advanced" && (
+              <>
+                <p className="px-1 text-sm text-muted-foreground">{t("advancedSub")}</p>
+                <div className="mt-4">
+                  <Group>
+                    <SettingToggle
+                      label={t("advancedMode")}
+                      on={optionOn("advancedMode")}
+                      onChange={(v) => setOption("advancedMode", v)}
+                    />
+                    <SettingToggle
+                      label={t("advHighQuality")}
+                      on={optionOn("highQuality", true)}
+                      onChange={(v) => setOption("highQuality", v)}
+                    />
+                    <SettingToggle
+                      label={t("advBeta")}
+                      on={optionOn("beta")}
+                      onChange={(v) => setOption("beta", v)}
+                    />
+                    <SettingToggle
+                      label={t("advDebug")}
+                      on={optionOn("debug")}
+                      onChange={(v) => setOption("debug", v)}
+                    />
+                  </Group>
+                </div>
+              </>
+            )}
+
+            {genericKey === "other" && (
               <Group>
-                <ToggleRow label={`${t("alwaysOn")}`} />
-                <ToggleRow label={t("suggestion")} />
-                <ToggleRow label={t("advancedMode")} />
+                <SettingToggle
+                  label={`${genericTitle} · ${t("alwaysOn")}`}
+                  on={optionOn(`${genericTitle}:on`)}
+                  onChange={(v) => setOption(`${genericTitle}:on`, v)}
+                />
+                <SettingToggle
+                  label={t("suggestion")}
+                  on={optionOn(`${genericTitle}:suggestion`)}
+                  onChange={(v) => setOption(`${genericTitle}:suggestion`, v)}
+                />
               </Group>
-            </div>
+            )}
           </div>
         )}
       </div>
@@ -926,13 +1046,20 @@ function RateDialog({
   );
 }
 
-function ToggleRow({ label }: { label: string }) {
-  const [on, setOn] = useState(false);
+function SettingToggle({
+  label,
+  on,
+  onChange,
+}: {
+  label: string;
+  on: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-center px-4 py-3.5 text-[17px]">
-      {label}
+      <span className="pr-3">{label}</span>
       <span className="ml-auto">
-        <Toggle on={on} onChange={setOn} />
+        <Toggle on={on} onChange={onChange} />
       </span>
     </div>
   );
