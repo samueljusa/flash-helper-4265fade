@@ -149,6 +149,21 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const fetchAccess = useServerFn(getAdminAccess);
+  const fetchTickets = useServerFn(listSupportMessages);
+  const fetchReplies = useServerFn(listSupportReplies);
+  const submitSupport = useServerFn(createSupportMessage);
+  const submitReply = useServerFn(replyToSupportMessage);
+
+  const [isStaff, setIsStaff] = useState(false);
+  const [tickets, setTickets] = useState<SupportMessage[]>([]);
+  const [replies, setReplies] = useState<SupportReply[]>([]);
+  const [openTicketId, setOpenTicketId] = useState<string | null>(null);
+  const [supportSubject, setSupportSubject] = useState("");
+  const [supportBody, setSupportBody] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [supportBusy, setSupportBusy] = useState(false);
+
   const flash = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1800);
