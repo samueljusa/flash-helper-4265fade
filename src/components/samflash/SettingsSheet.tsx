@@ -664,10 +664,95 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               value={feedbackText}
               onChange={(e) => setFeedbackText(e.target.value)}
               placeholder="Veuillez décrire votre problème..."
-              className="mt-4 h-48 w-full resize-none rounded-2xl bg-card p-4 text-[17px] outline-none placeholder:text-muted-foreground"
+              className="mt-4 h-40 w-full resize-none rounded-2xl bg-card p-4 text-[17px] outline-none placeholder:text-muted-foreground"
             />
+            <button
+              type="button"
+              disabled={supportBusy || feedbackText.trim().length < 5}
+              onClick={() => void sendReport()}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3.5 font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {supportBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MessageSquare className="h-4 w-4" />
+              )}
+              Envoyer au support
+            </button>
+
+            <SectionTitle>Mes signalements</SectionTitle>
+            {tickets.length === 0 ? (
+              <p className="px-1 pb-4 text-sm text-muted-foreground">
+                Aucun signalement pour le moment. L'équipe vous répond directement ici.
+              </p>
+            ) : (
+              <div className="space-y-3 pb-4">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="rounded-2xl bg-card p-4">
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-3 text-left"
+                      onClick={() => void openTicket(ticket.id)}
+                    >
+                      <MessageSquareWarning className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{ticket.subject}</span>
+                        <span className="block truncate text-sm text-muted-foreground">
+                          {ticket.body}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
+                        {ticket.status}
+                      </span>
+                    </button>
+
+                    {openTicketId === ticket.id && (
+                      <div className="mt-3 border-t border-border pt-3">
+                        {replies.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Pas encore de réponse.</p>
+                        ) : (
+                          <ul className="space-y-2">
+                            {replies.map((r) => (
+                              <li
+                                key={r.id}
+                                className={`rounded-xl px-3 py-2 text-sm ${
+                                  r.is_staff ? "bg-primary/15" : "bg-secondary"
+                                }`}
+                              >
+                                <span className="block text-xs text-muted-foreground">
+                                  {r.is_staff ? "Support" : "Vous"}
+                                </span>
+                                {r.body}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Répondre…"
+                            className="flex-1 rounded-xl bg-secondary px-3 py-2 text-sm outline-none"
+                          />
+                          <button
+                            type="button"
+                            aria-label="Envoyer la réponse"
+                            disabled={supportBusy || replyText.trim().length === 0}
+                            onClick={() => void sendReply(ticket.id)}
+                            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
+
 
         {view === "appearance" && (
           <div className="pt-6">
