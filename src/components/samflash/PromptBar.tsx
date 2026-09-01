@@ -28,7 +28,8 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
   const [sent, setSent] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [promptFocused, setPromptFocused] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const focusInput = () => inputRef.current?.focus();
   const generate = useServerFn(generateMedia);
   const enhance = useServerFn(enhancePrompt);
@@ -126,7 +127,13 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-[28px] border border-border bg-card/60 p-3 backdrop-blur-2xl">
+      <div
+        className={`relative overflow-hidden rounded-[28px] border bg-card/60 p-3 backdrop-blur-2xl transition-[border-color,box-shadow,background-color] duration-300 ease-out ${
+          promptFocused
+            ? "border-ring/50 bg-card/80 shadow-[0_10px_40px_-18px_color-mix(in_oklch,var(--ring)_55%,transparent)] ring-1 ring-ring/20"
+            : "border-border"
+        }`}
+      >
         {enhancing && (
           <div
             aria-hidden
@@ -134,18 +141,26 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
           />
         )}
 
-        <input
+        <textarea
           ref={inputRef}
+          rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onFocus={() => setPromptFocused(true)}
+          onBlur={() => setPromptFocused(false)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") void submit();
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              void submit();
+            }
           }}
           disabled={enhancing}
           placeholder={
             t("promptPlaceholder")
           }
-          className="w-full bg-transparent px-2 pb-3 text-[17px] outline-none placeholder:text-muted-foreground"
+          className={`block w-full resize-none overflow-y-auto bg-transparent px-2 pb-3 text-[17px] leading-6 outline-none transition-[min-height] duration-300 ease-out [field-sizing:content] placeholder:text-muted-foreground ${
+            promptFocused || text ? "min-h-24 max-h-56" : "min-h-11 max-h-56"
+          }`}
         />
 
         <div className="flex items-center gap-2">
