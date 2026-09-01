@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { Plus, Image as ImageIcon, Video, Smile, ArrowUp, Loader2 } from "lucide-react";
+import { Plus, Image as ImageIcon, Video, Smile, ArrowUp, Loader2, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { generateMedia } from "@/lib/generation.functions";
+import { enhancePrompt } from "@/lib/prompt.functions";
 import { formatSeconds } from "@/lib/quota";
 import { useI18n } from "@/lib/i18n";
+
 
 const chip = (active: boolean) =>
   `shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
