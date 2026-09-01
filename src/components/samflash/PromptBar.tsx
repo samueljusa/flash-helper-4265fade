@@ -130,9 +130,10 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
         {enhancing && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 animate-[shimmer_1.2s_linear_infinite] bg-[linear-gradient(110deg,transparent_25%,hsl(var(--primary)/0.18)_45%,transparent_65%)] bg-[length:250%_100%]"
+            className="pointer-events-none absolute inset-0 animate-[promptShimmer_1.2s_linear_infinite] bg-[linear-gradient(110deg,transparent_25%,color-mix(in_oklch,var(--primary)_28%,transparent)_45%,transparent_65%)] bg-[length:250%_100%]"
           />
         )}
+
         <input
           ref={inputRef}
           value={text}
