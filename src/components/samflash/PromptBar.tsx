@@ -19,7 +19,7 @@ type Props = {
 };
 
 export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [res, setRes] = useState("720p");
   const [dur, setDur] = useState("6s");
   const [ratio, setRatio] = useState("2:3");
@@ -27,9 +27,34 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
   const [text, setText] = useState("");
   const [sent, setSent] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const focusInput = () => inputRef.current?.focus();
   const generate = useServerFn(generateMedia);
+  const enhance = useServerFn(enhancePrompt);
+
+  const runEnhance = async () => {
+    const prompt = text.trim();
+    if (!prompt || enhancing || busy) return;
+    setEnhancing(true);
+    setSent(t("enhancing"));
+    try {
+      const result = await enhance({ data: { prompt, mediaType: mode, language: lang } });
+      if (result.ok) {
+        setText(result.prompt);
+        setSent(t("enhanceDone"));
+        focusInput();
+      } else {
+        setSent(result.message ?? t("enhanceFail"));
+      }
+    } catch (error) {
+      setSent(error instanceof Error ? error.message : t("enhanceFail"));
+    } finally {
+      setEnhancing(false);
+      setTimeout(() => setSent(null), 2600);
+    }
+  };
+
 
   const submit = async () => {
     const prompt = text.trim();
