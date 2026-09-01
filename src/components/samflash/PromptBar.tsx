@@ -126,7 +126,13 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-border bg-card/60 p-3 backdrop-blur-2xl">
+      <div className="relative overflow-hidden rounded-[28px] border border-border bg-card/60 p-3 backdrop-blur-2xl">
+        {enhancing && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 animate-[shimmer_1.2s_linear_infinite] bg-[linear-gradient(110deg,transparent_25%,hsl(var(--primary)/0.18)_45%,transparent_65%)] bg-[length:250%_100%]"
+          />
+        )}
         <input
           ref={inputRef}
           value={text}
@@ -134,11 +140,13 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
           onKeyDown={(e) => {
             if (e.key === "Enter") void submit();
           }}
+          disabled={enhancing}
           placeholder={
             t("promptPlaceholder")
           }
           className="w-full bg-transparent px-2 pb-3 text-[17px] outline-none placeholder:text-muted-foreground"
         />
+
         <div className="flex items-center gap-2">
           <button
             type="button"
