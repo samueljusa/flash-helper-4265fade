@@ -195,11 +195,27 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
           </div>
           <button
             type="button"
+            aria-label={t("enhance")}
+            title={t("enhance")}
+            onClick={() => void runEnhance()}
+            className="group relative ml-auto flex h-11 items-center gap-2 rounded-full bg-secondary px-3 text-foreground transition-colors disabled:opacity-40"
+            disabled={!text.trim() || enhancing || busy}
+          >
+            {enhancing ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Sparkles className="h-5 w-5" />
+            )}
+            <span className="hidden text-sm font-medium sm:inline">{t("enhance")}</span>
+          </button>
+          <button
+            type="button"
             aria-label={t("send")}
             onClick={() => void submit()}
-            className="ml-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
-            disabled={!text.trim() || busy}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+            disabled={!text.trim() || busy || enhancing}
           >
+
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
           </button>
         </div>
