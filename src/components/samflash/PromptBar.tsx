@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { Plus, Image as ImageIcon, Video, Smile, ArrowUp, Loader2 } from "lucide-react";
+import { Plus, Image as ImageIcon, Video, Smile, ArrowUp, Loader2, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { generateMedia } from "@/lib/generation.functions";
+import { enhancePrompt } from "@/lib/prompt.functions";
 import { formatSeconds } from "@/lib/quota";
 import { useI18n } from "@/lib/i18n";
+
 
 const chip = (active: boolean) =>
   `shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
@@ -17,7 +19,7 @@ type Props = {
 };
 
 export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [res, setRes] = useState("720p");
   const [dur, setDur] = useState("6s");
   const [ratio, setRatio] = useState("2:3");
@@ -25,9 +27,34 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
   const [text, setText] = useState("");
   const [sent, setSent] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const focusInput = () => inputRef.current?.focus();
   const generate = useServerFn(generateMedia);
+  const enhance = useServerFn(enhancePrompt);
+
+  const runEnhance = async () => {
+    const prompt = text.trim();
+    if (!prompt || enhancing || busy) return;
+    setEnhancing(true);
+    setSent(t("enhancing"));
+    try {
+      const result = await enhance({ data: { prompt, mediaType: mode, language: lang } });
+      if (result.ok) {
+        setText(result.prompt);
+        setSent(t("enhanceDone"));
+        focusInput();
+      } else {
+        setSent(result.message ?? t("enhanceFail"));
+      }
+    } catch (error) {
+      setSent(error instanceof Error ? error.message : t("enhanceFail"));
+    } finally {
+      setEnhancing(false);
+      setTimeout(() => setSent(null), 2600);
+    }
+  };
+
 
   const submit = async () => {
     const prompt = text.trim();
@@ -99,7 +126,14 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-border bg-card/60 p-3 backdrop-blur-2xl">
+      <div className="relative overflow-hidden rounded-[28px] border border-border bg-card/60 p-3 backdrop-blur-2xl">
+        {enhancing && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 animate-[promptShimmer_1.2s_linear_infinite] bg-[linear-gradient(110deg,transparent_25%,color-mix(in_oklch,var(--primary)_28%,transparent)_45%,transparent_65%)] bg-[length:250%_100%]"
+          />
+        )}
+
         <input
           ref={inputRef}
           value={text}
@@ -107,11 +141,13 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
           onKeyDown={(e) => {
             if (e.key === "Enter") void submit();
           }}
+          disabled={enhancing}
           placeholder={
             t("promptPlaceholder")
           }
           className="w-full bg-transparent px-2 pb-3 text-[17px] outline-none placeholder:text-muted-foreground"
         />
+
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -159,11 +195,27 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
           </div>
           <button
             type="button"
+            aria-label={t("enhance")}
+            title={t("enhance")}
+            onClick={() => void runEnhance()}
+            className="group relative ml-auto flex h-11 items-center gap-2 rounded-full bg-secondary px-3 text-foreground transition-colors disabled:opacity-40"
+            disabled={!text.trim() || enhancing || busy}
+          >
+            {enhancing ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Sparkles className="h-5 w-5" />
+            )}
+            <span className="hidden text-sm font-medium sm:inline">{t("enhance")}</span>
+          </button>
+          <button
+            type="button"
             aria-label={t("send")}
             onClick={() => void submit()}
-            className="ml-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
-            disabled={!text.trim() || busy}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+            disabled={!text.trim() || busy || enhancing}
           >
+
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
           </button>
         </div>
