@@ -14,6 +14,7 @@ import { PromptBar } from "@/components/samflash/PromptBar";
 import { PlansSheet } from "@/components/samflash/PlansSheet";
 import { useGenerations } from "@/hooks/useGenerations";
 import { TIER_LABEL, formatSeconds } from "@/lib/quota";
+import logoAsset from "@/assets/sam-flash-logo.png.asset.json";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -64,7 +65,11 @@ function AppFeed() {
       style={{ background: "var(--gradient-hero)" }}
     >
       <header className="sticky top-0 z-30 flex items-center gap-3 bg-background/60 px-4 py-3 backdrop-blur-xl">
-        <Sparkles className="h-7 w-7 text-primary" />
+        <img
+          src={logoAsset.url}
+          alt="Logo Sam flash 2.0"
+          className="h-10 w-10 rounded-full object-cover shadow-md"
+        />
         <div className="min-w-0">
           <span className="block text-xl font-semibold leading-tight tracking-tight">
             Sam flash 2.0
