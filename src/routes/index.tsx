@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Mail, Loader2, ChevronLeft } from "lucide-react";
 import nightSky from "@/assets/night-sky.jpg";
+import logoAsset from "@/assets/sam-flash-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
@@ -107,6 +108,11 @@ function Login() {
     >
       <div className="flex flex-1 flex-col items-center justify-center text-center">
         <div className="animate-float">
+          <img
+            src={logoAsset.url}
+            alt="Logo Sam flash 2.0"
+            className="mx-auto mb-5 h-28 w-28 rounded-full object-cover shadow-2xl"
+          />
           <h1 className="max-w-xs text-4xl font-semibold leading-tight tracking-tight text-foreground">
             Sam flash 2.0
           </h1>
