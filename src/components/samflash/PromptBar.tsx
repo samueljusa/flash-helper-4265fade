@@ -68,7 +68,9 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
     const prompt = text.trim();
     if (!prompt || busy) return;
     setBusy(true);
+    blurInput();
     onStart?.({ prompt, mediaType: mode });
+
     setSent(
       mode === "video"
         ? `${t("video")} ${res} · ${dur} · ${ratio}…`
