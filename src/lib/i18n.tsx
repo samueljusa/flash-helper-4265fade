@@ -283,7 +283,18 @@ const extraEn: Dict = {
   advDebug: "Technical log",
   optionSaved: "Option saved",
   themeSystem: "System",
+  renderingVideo: "Rendering video…",
+  renderingImage: "Rendering image…",
+  download: "Download",
+  downloadOk: "Download started",
+  subtitles: "Subtitles",
+  subsOk: "Subtitles added",
+  subsFail: "Could not create subtitles",
+  toVideo: "To video",
+  regenerate: "Regenerate",
+  openMedia: "Open creation",
 };
+
 
 const extraEs: Dict = {
   ...extraEn,
