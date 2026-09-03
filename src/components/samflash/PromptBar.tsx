@@ -14,11 +14,13 @@ const chip = (active: boolean) =>
 
 type Props = {
   quota?: { used: number; limit: number; remaining: number } | null;
+  onStart?: (info: { prompt: string; mediaType: "image" | "video" }) => void;
+  onSettled?: () => void;
   onGenerated?: () => void;
   onQuotaExceeded?: () => void;
 };
 
-export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
+export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExceeded }: Props) {
   const { t, lang } = useI18n();
   const [res, setRes] = useState("720p");
   const [dur, setDur] = useState("6s");
@@ -61,6 +63,7 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
     const prompt = text.trim();
     if (!prompt || busy) return;
     setBusy(true);
+    onStart?.({ prompt, mediaType: mode });
     setSent(
       mode === "video"
         ? `${t("video")} ${res} · ${dur} · ${ratio}…`
@@ -85,6 +88,7 @@ export function PromptBar({ quota, onGenerated, onQuotaExceeded }: Props) {
       setSent(error instanceof Error ? error.message : t("genFail"));
     } finally {
       setBusy(false);
+      onSettled?.();
       setTimeout(() => setSent(null), 2600);
     }
   };

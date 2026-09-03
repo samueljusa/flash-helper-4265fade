@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ChevronRight, Share2, Sparkles, User } from "lucide-react";
+import { ChevronRight, Play, Share2, Sparkles, User } from "lucide-react";
 import { submitToGallery } from "@/lib/community.functions";
 import { SupportReplyNotifier } from "@/components/samflash/SupportReplyNotifier";
 
@@ -12,7 +12,9 @@ import { useI18n } from "@/lib/i18n";
 import { SettingsSheet } from "@/components/samflash/SettingsSheet";
 import { PromptBar } from "@/components/samflash/PromptBar";
 import { PlansSheet } from "@/components/samflash/PlansSheet";
-import { useGenerations } from "@/hooks/useGenerations";
+import { useGenerations, type Generation } from "@/hooks/useGenerations";
+import { PendingCard } from "@/components/samflash/PendingCard";
+import { MediaViewer } from "@/components/samflash/MediaViewer";
 import { TIER_LABEL, formatSeconds } from "@/lib/quota";
 import logoAsset from "@/assets/sam-flash-logo.png.asset.json";
 
@@ -40,6 +42,10 @@ export const Route = createFileRoute("/app")({
 function AppFeed() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
+  const [pending, setPending] = useState<{ prompt: string; mediaType: "image" | "video" } | null>(
+    null,
+  );
+  const [viewer, setViewer] = useState<Generation | null>(null);
   const navigate = useNavigate();
   const { t } = useI18n();
   const { session, loading } = useAuth();
@@ -233,6 +239,13 @@ function AppFeed() {
       <SupportReplyNotifier enabled={!!session} />
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {plansOpen && <PlansSheet onClose={() => setPlansOpen(false)} />}
+      {viewer && (
+        <MediaViewer
+          item={viewer}
+          onClose={() => setViewer(null)}
+          onChanged={() => void refresh()}
+        />
+      )}
     </div>
   );
 }
