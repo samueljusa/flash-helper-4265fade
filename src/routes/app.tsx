@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ChevronRight, Share2, Sparkles, User } from "lucide-react";
+import { ChevronRight, Play, Share2, Sparkles, User } from "lucide-react";
 import { submitToGallery } from "@/lib/community.functions";
 import { SupportReplyNotifier } from "@/components/samflash/SupportReplyNotifier";
 
@@ -12,7 +12,9 @@ import { useI18n } from "@/lib/i18n";
 import { SettingsSheet } from "@/components/samflash/SettingsSheet";
 import { PromptBar } from "@/components/samflash/PromptBar";
 import { PlansSheet } from "@/components/samflash/PlansSheet";
-import { useGenerations } from "@/hooks/useGenerations";
+import { useGenerations, type Generation } from "@/hooks/useGenerations";
+import { PendingCard } from "@/components/samflash/PendingCard";
+import { MediaViewer } from "@/components/samflash/MediaViewer";
 import { TIER_LABEL, formatSeconds } from "@/lib/quota";
 import logoAsset from "@/assets/sam-flash-logo.png.asset.json";
 
@@ -40,6 +42,10 @@ export const Route = createFileRoute("/app")({
 function AppFeed() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
+  const [pending, setPending] = useState<{ prompt: string; mediaType: "image" | "video" } | null>(
+    null,
+  );
+  const [viewer, setViewer] = useState<Generation | null>(null);
   const navigate = useNavigate();
   const { t } = useI18n();
   const { session, loading } = useAuth();
@@ -146,6 +152,13 @@ function AppFeed() {
           </button>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 px-4">
+          {pending && (
+            <PendingCard
+              prompt={pending.prompt}
+              mediaType={pending.mediaType}
+              estimate={pending.mediaType === "video" ? 75 : 25}
+            />
+          )}
           {feedLoading && items.length === 0
             ? Array.from({ length: 4 }).map((_, i) => (
                 <div
@@ -158,19 +171,41 @@ function AppFeed() {
                   key={g.id}
                   className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-xl"
                 >
-                  {g.media_url ? (
-                    <img
-                      src={g.media_url}
-                      alt={g.prompt}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
-                      {g.status === "processing"
-                        ? t("processing")
-                        : (g.error_message ?? g.prompt)}
-                    </div>
+                  <button
+                    type="button"
+                    aria-label={t("openMedia")}
+                    onClick={() => setViewer(g)}
+                    className="block h-full w-full text-left"
+                  >
+                    {g.media_url ? (
+                      g.media_type === "video" ? (
+                        <video
+                          src={g.media_url}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={g.media_url}
+                          alt={g.prompt}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      )
+                    ) : (
+                      <div className="flex h-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
+                        {g.status === "processing"
+                          ? t("processing")
+                          : (g.error_message ?? g.prompt)}
+                      </div>
+                    )}
+                  </button>
+                  {g.media_type === "video" && g.media_url && (
+                    <span className="pointer-events-none absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/70 backdrop-blur-md">
+                      <Play className="h-4 w-4" />
+                    </span>
                   )}
                   <button
                     type="button"
@@ -180,12 +215,12 @@ function AppFeed() {
                   >
                     <Share2 className="h-4 w-4" />
                   </button>
-                  <div className="absolute inset-x-0 bottom-0 bg-background/70 px-2 py-1 text-[11px] line-clamp-2 backdrop-blur-md">
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-background/70 px-2 py-1 text-[11px] line-clamp-2 backdrop-blur-md">
                     {g.prompt}
                   </div>
                 </div>
               ))}
-          {!feedLoading && items.length === 0 && (
+          {!feedLoading && items.length === 0 && !pending && (
             <p className="col-span-2 py-10 text-center text-sm text-muted-foreground">
               {t("emptyFeed")}
             </p>
@@ -195,12 +230,22 @@ function AppFeed() {
 
       <PromptBar
         quota={quota}
+        onStart={(p) => setPending(p)}
+        onSettled={() => setPending(null)}
         onGenerated={() => void refresh()}
         onQuotaExceeded={() => setPlansOpen(true)}
       />
+
       <SupportReplyNotifier enabled={!!session} />
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {plansOpen && <PlansSheet onClose={() => setPlansOpen(false)} />}
+      {viewer && (
+        <MediaViewer
+          item={viewer}
+          onClose={() => setViewer(null)}
+          onChanged={() => void refresh()}
+        />
+      )}
     </div>
   );
 }

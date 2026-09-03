@@ -231,7 +231,18 @@ const extraFr: Dict = {
   advDebug: "Journal technique",
   optionSaved: "Option enregistrée",
   themeSystem: "Système",
+  renderingVideo: "Rendu vidéo…",
+  renderingImage: "Rendu image…",
+  download: "Télécharger",
+  downloadOk: "Téléchargement lancé",
+  subtitles: "Sous-titres",
+  subsOk: "Sous-titres ajoutés",
+  subsFail: "Sous-titres impossibles",
+  toVideo: "En vidéo",
+  regenerate: "Régénérer",
+  openMedia: "Ouvrir la création",
 };
+
 
 const extraEn: Dict = {
   subscriptionBtn: "Subscription",
@@ -272,7 +283,18 @@ const extraEn: Dict = {
   advDebug: "Technical log",
   optionSaved: "Option saved",
   themeSystem: "System",
+  renderingVideo: "Rendering video…",
+  renderingImage: "Rendering image…",
+  download: "Download",
+  downloadOk: "Download started",
+  subtitles: "Subtitles",
+  subsOk: "Subtitles added",
+  subsFail: "Could not create subtitles",
+  toVideo: "To video",
+  regenerate: "Regenerate",
+  openMedia: "Open creation",
 };
+
 
 const extraEs: Dict = {
   ...extraEn,
