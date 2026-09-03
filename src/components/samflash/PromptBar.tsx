@@ -33,6 +33,11 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
   const [promptFocused, setPromptFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const focusInput = () => inputRef.current?.focus();
+  const blurInput = () => {
+    inputRef.current?.blur();
+    setPromptFocused(false);
+  };
+
   const generate = useServerFn(generateMedia);
   const enhance = useServerFn(enhancePrompt);
 
