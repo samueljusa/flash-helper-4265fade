@@ -33,6 +33,11 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
   const [promptFocused, setPromptFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const focusInput = () => inputRef.current?.focus();
+  const blurInput = () => {
+    inputRef.current?.blur();
+    setPromptFocused(false);
+  };
+
   const generate = useServerFn(generateMedia);
   const enhance = useServerFn(enhancePrompt);
 
@@ -63,7 +68,9 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
     const prompt = text.trim();
     if (!prompt || busy) return;
     setBusy(true);
+    blurInput();
     onStart?.({ prompt, mediaType: mode });
+
     setSent(
       mode === "video"
         ? `${t("video")} ${res} · ${dur} · ${ratio}…`
