@@ -103,6 +103,7 @@ export async function generateImageWithXai(req: XaiMediaRequest): Promise<XaiMed
         model: xaiModels().image,
         prompt: `${req.prompt}. Format ${normalizeAspect(req.aspectRatio)}, qualité ${req.resolution}.`,
         n: 1,
+        aspect_ratio: normalizeAspect(req.aspectRatio),
         response_format: "b64_json",
       }),
     });

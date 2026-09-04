@@ -68,6 +68,7 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
     const prompt = text.trim();
     if (!prompt || busy) return;
     setBusy(true);
+    setText("");
     blurInput();
     onStart?.({ prompt, mediaType: mode });
 
@@ -81,17 +82,18 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
         data: { prompt, mediaType: mode, resolution: res, duration: dur, aspectRatio: ratio },
       });
       if (result.ok) {
-        setText("");
         setSent(t("genDone"));
         onGenerated?.();
       } else if (result.reason === "quota") {
-
+        setText(prompt);
         setSent(t("quotaReached"));
         onQuotaExceeded?.();
       } else {
+        setText(prompt);
         setSent(result.message ?? t("genFail"));
       }
     } catch (error) {
+      setText(prompt);
       setSent(error instanceof Error ? error.message : t("genFail"));
     } finally {
       setBusy(false);
