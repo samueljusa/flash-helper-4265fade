@@ -33,6 +33,7 @@ import {
   User,
   Loader2,
 } from "lucide-react";
+import { playChime } from "@/lib/chime";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminAccess } from "@/lib/admin.functions";
 import {
@@ -207,12 +208,14 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
       const res = await submitSupport({
         data: { subject: feedbackType, body: feedbackText.trim() },
       });
+      playChime(res.ok ? "success" : "error");
       flash(res.message);
       if (res.ok) {
         setFeedbackText("");
         await loadTickets();
       }
     } catch {
+      playChime("error");
       flash("Envoi impossible.");
     }
     setSupportBusy(false);
@@ -222,6 +225,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
     setSupportBusy(true);
     try {
       const res = await submitReply({ data: { messageId, body: replyText.trim() } });
+      playChime(res.ok ? "success" : "error");
       flash(res.message);
       if (res.ok) {
         setReplyText("");
