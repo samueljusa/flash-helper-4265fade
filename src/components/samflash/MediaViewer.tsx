@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { generateMedia, retryGeneration } from "@/lib/generation.functions";
 import { generateSubtitles } from "@/lib/subtitles.functions";
 import { useI18n } from "@/lib/i18n";
+import { playChime } from "@/lib/chime";
 import type { Generation } from "@/hooks/useGenerations";
 
 type Props = {
@@ -52,6 +53,7 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      playChime("success");
       toast.success(t("downloadOk"));
     } catch {
       window.open(item.media_url, "_blank", "noopener");
@@ -70,8 +72,10 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
         const url = URL.createObjectURL(new Blob([result.vtt], { type: "text/vtt" }));
         setVttUrl(url);
         setSubsOn(true);
+        playChime("success");
         toast.success(t("subsOk"));
       } else {
+        playChime("error");
         toast.error(result.message ?? t("subsFail"));
       }
     } catch {
@@ -86,10 +90,12 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
     try {
       const result = await retry({ data: { id: item.id } });
       if (result.ok) {
+        playChime("success");
         toast.success(t("genDone"));
         onChanged?.();
         onClose();
       } else {
+        playChime("error");
         toast.error(result.reason === "quota" ? t("quotaReached") : (result.message ?? t("genFail")));
       }
     } catch {
@@ -112,10 +118,12 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
         },
       });
       if (result.ok) {
+        playChime("success");
         toast.success(t("genDone"));
         onChanged?.();
         onClose();
       } else {
+        playChime("error");
         toast.error(result.reason === "quota" ? t("quotaReached") : (result.message ?? t("genFail")));
       }
     } catch {

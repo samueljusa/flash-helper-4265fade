@@ -5,6 +5,7 @@ import { generateMedia } from "@/lib/generation.functions";
 import { enhancePrompt } from "@/lib/prompt.functions";
 import { formatSeconds } from "@/lib/quota";
 import { useI18n } from "@/lib/i18n";
+import { playChime } from "@/lib/chime";
 
 
 const chip = (active: boolean) =>
@@ -50,6 +51,7 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
       const result = await enhance({ data: { prompt, mediaType: mode, language: lang } });
       if (result.ok) {
         setText(result.prompt);
+        playChime("success");
         setSent(t("enhanceDone"));
         focusInput();
       } else {
@@ -70,6 +72,7 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
     setBusy(true);
     setText("");
     blurInput();
+    playChime("send");
     onStart?.({ prompt, mediaType: mode });
 
     setSent(
@@ -82,17 +85,21 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
         data: { prompt, mediaType: mode, resolution: res, duration: dur, aspectRatio: ratio },
       });
       if (result.ok) {
+        playChime("success");
         setSent(t("genDone"));
         onGenerated?.();
       } else if (result.reason === "quota") {
+        playChime("error");
         setText(prompt);
         setSent(t("quotaReached"));
         onQuotaExceeded?.();
       } else {
+        playChime("error");
         setText(prompt);
         setSent(result.message ?? t("genFail"));
       }
     } catch (error) {
+      playChime("error");
       setText(prompt);
       setSent(error instanceof Error ? error.message : t("genFail"));
     } finally {
