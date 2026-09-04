@@ -105,7 +105,7 @@ async function generateImage(input: GenerationInput): Promise<MediaOutcome> {
         messages: [
           {
             role: "user",
-            content: `${input.prompt}. Format ${input.aspectRatio}, qualité ${input.resolution}.`,
+            content: `${input.prompt}. Génère l'image strictement au format d'image ${input.aspectRatio} (ratio largeur:hauteur exact, sans bandes ni recadrage), qualité ${input.resolution}.`,
           },
         ],
         modalities: ["image", "text"],
