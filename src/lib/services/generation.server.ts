@@ -71,6 +71,13 @@ type MediaOutcome =
   | { ok: true; bytes: Uint8Array | null; contentType: string; mediaUrl: string | null }
   | { ok: false; error: string };
 
+/** Taille exacte acceptée par gpt-image-2 pour le format demandé. */
+function openaiSizeFor(ratio: string): "1024x1024" | "1024x1536" | "1536x1024" {
+  const [w, h] = ratio.split(":").map((n) => Number.parseFloat(n));
+  if (!w || !h || w === h) return "1024x1024";
+  return w > h ? "1536x1024" : "1024x1536";
+}
+
 /** Chaîne de fournisseurs pour les images : Grok Imagine → OpenRouter → passerelle Lovable. */
 async function generateImage(input: GenerationInput): Promise<MediaOutcome> {
   const errors: string[] = [];
