@@ -75,7 +75,8 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
         playChime("success");
         toast.success(t("subsOk"));
       } else {
-        playChime("error"), toast.error(result.message ?? t("subsFail"));
+        playChime("error");
+        toast.error(result.message ?? t("subsFail"));
       }
     } catch {
       toast.error(t("subsFail"));
@@ -94,7 +95,8 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
         onChanged?.();
         onClose();
       } else {
-        playChime("error"), toast.error(result.reason === "quota" ? t("quotaReached") : (result.message ?? t("genFail")));
+        playChime("error");
+        toast.error(result.reason === "quota" ? t("quotaReached") : (result.message ?? t("genFail")));
       }
     } catch {
       toast.error(t("genFail"));
@@ -121,7 +123,8 @@ export function MediaViewer({ item, onClose, onChanged }: Props) {
         onChanged?.();
         onClose();
       } else {
-        playChime("error"), toast.error(result.reason === "quota" ? t("quotaReached") : (result.message ?? t("genFail")));
+        playChime("error");
+        toast.error(result.reason === "quota" ? t("quotaReached") : (result.message ?? t("genFail")));
       }
     } catch {
       toast.error(t("genFail"));
