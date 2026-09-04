@@ -130,7 +130,7 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
           </div>
         )}
         <div className="flex shrink-0 items-center gap-1 rounded-full bg-secondary/80 p-1 backdrop-blur-xl">
-          {["2:3", "1:1", "16:9"].map((r) => (
+          {["9:16", "2:3", "3:4", "1:1", "16:9"].map((r) => (
             <button key={r} type="button" onClick={() => setRatio(r)} className={chip(ratio === r)}>
               {r}
             </button>

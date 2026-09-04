@@ -168,7 +168,7 @@ export function imageModelChain(preferred?: string): string[] {
 export async function generateImageWithOpenRouter(
   req: OpenRouterMediaRequest,
 ): Promise<OpenRouterMediaResult> {
-  const prompt = `${req.prompt}. Image au format ${req.aspectRatio}, qualité ${req.resolution}, rendu photoréaliste soigné.`;
+  const prompt = `${req.prompt}. Image strictement au format ${req.aspectRatio} (ratio largeur:hauteur exact, sans bandes ni recadrage), qualité ${req.resolution}, rendu photoréaliste soigné.`;
   const errors: string[] = [];
 
   for (const model of imageModelChain(req.model)) {
