@@ -68,6 +68,7 @@ export function PromptBar({ quota, onStart, onSettled, onGenerated, onQuotaExcee
     const prompt = text.trim();
     if (!prompt || busy) return;
     setBusy(true);
+    setText("");
     blurInput();
     onStart?.({ prompt, mediaType: mode });
 
